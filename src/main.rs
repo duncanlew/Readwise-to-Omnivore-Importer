@@ -1,3 +1,20 @@
+use std::{error::Error, io, process};
+
+fn example() -> Result<(), Box<dyn Error>> {
+    println!("Inside the example");
+    let my_input = io::stdin();
+    println!("{:?}", my_input);
+    let mut reader = csv::Reader::from_reader(io::stdin());
+    for result in reader.records() {
+        let record = result?;
+        println!("{:?}", record);
+    }
+    Ok(())
+}
+
 fn main() {
-    println!("Hello, world!");
+    if let Err(err) = example() {
+        println!("Error running example: {}", err);
+        process::exit(1);
+    }
 }
