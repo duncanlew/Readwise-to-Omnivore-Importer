@@ -1,7 +1,7 @@
 use std::{error::Error, io, process};
 
 #[derive(Debug, serde::Deserialize)]
-struct Record {
+struct Article {
     #[serde(rename(deserialize = "Title"))]
     title: String,
     #[serde(rename(deserialize = "URL"))]
@@ -19,10 +19,11 @@ struct Record {
 }
 
 fn example() -> Result<(), Box<dyn Error>> {
-    let mut reader = csv::Reader::from_path("test.csv")?;
-    for result in reader.deserialize() {
-        let record: Record = result?;
-        println!("{:?}", record);
+    // TODO place everything in a list
+    let mut csv_reader = csv::Reader::from_path("test.csv")?;
+    for row in csv_reader.deserialize() {
+        let record: Article = row?;
+        println!("{:#?}", record);
     }
     Ok(())
 }
