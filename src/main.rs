@@ -19,12 +19,15 @@ struct Article {
 }
 
 fn example() -> Result<(), Box<dyn Error>> {
-    // TODO place everything in a list
     let mut csv_reader = csv::Reader::from_path("test.csv")?;
-    for row in csv_reader.deserialize() {
-        let article: Article = row?;
-        println!("{:#?}", article);
-    }
+
+    let articles: Vec<Article> = csv_reader
+        .deserialize()
+        .filter_map(|row| row.ok())
+        .collect();
+    println!("{:#?}", articles);
+
+
     Ok(())
 }
 
