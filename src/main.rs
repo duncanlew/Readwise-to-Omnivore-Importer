@@ -1,9 +1,6 @@
 use std::{error::Error, io, process};
 
 fn example() -> Result<(), Box<dyn Error>> {
-    println!("Inside the example");
-    let my_input = io::stdin();
-    println!("{:?}", my_input);
     let mut reader = csv::Reader::from_reader(io::stdin());
     for result in reader.records() {
         let record = result?;
