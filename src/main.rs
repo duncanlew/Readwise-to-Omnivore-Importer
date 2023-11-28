@@ -19,7 +19,7 @@ struct Record {
 }
 
 fn example() -> Result<(), Box<dyn Error>> {
-    let mut reader = csv::Reader::from_reader(io::stdin());
+    let mut reader = csv::Reader::from_path("test.csv")?;
     for result in reader.deserialize() {
         let record: Record = result?;
         println!("{:?}", record);
