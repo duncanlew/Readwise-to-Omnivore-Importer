@@ -23,7 +23,7 @@ struct Article {
 
 fn get_imported_articles() -> Result<(Vec<Article>), Box<dyn Error>> {
     let mut csv_reader = csv::Reader::from_path("test.csv")?;
-    let (errors, articles): (Vec<_>, Vec<Article>) = csv_reader
+    let (errors, articles): (Vec<csv::Error>, Vec<Article>) = csv_reader
         .deserialize()
         .partition_map(|row| match row {
             Err(e) => Left(e),
@@ -41,8 +41,12 @@ fn get_imported_articles() -> Result<(Vec<Article>), Box<dyn Error>> {
 }
 
 fn main() {
-    if let Err(err) = get_imported_articles() {
-        println!("Error running example: {}", err);
-        process::exit(1);
-    }
+    let imported_articles = get_imported_articles()
+        .unwrap_or_else(|err| {
+            println!("Error running example: {}", err);
+            process::exit(1);
+        });
+
+    println!("Doing this from the main");
+    imported_articles.iter().for_each(|article: &Article| println!("{:#?}", article))
 }
