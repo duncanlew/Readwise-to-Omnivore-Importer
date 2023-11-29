@@ -30,8 +30,8 @@ fn get_imported_articles() -> Result<(Vec<Article>), Box<dyn Error>> {
             Ok(article) => Right(article)
         });
 
-    println!("{:#?}", articles);
-    println!("{:#?}", errors);
+    // println!("{:#?}", articles);
+    // println!("{:#?}", errors);
 
     if errors.is_empty() {
         Ok(articles)
@@ -43,7 +43,7 @@ fn get_imported_articles() -> Result<(Vec<Article>), Box<dyn Error>> {
 fn main() {
     let imported_articles = get_imported_articles()
         .unwrap_or_else(|err| {
-            println!("Error running example: {}", err);
+            eprintln!("{}", err);
             process::exit(1);
         });
 
