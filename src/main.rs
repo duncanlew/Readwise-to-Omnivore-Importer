@@ -1,4 +1,7 @@
 use std::{error::Error, io, process};
+use itertools::Either::Left;
+use itertools::Either::Right;
+use itertools::Itertools;
 
 #[derive(Debug, serde::Deserialize)]
 struct Article {
@@ -20,12 +23,15 @@ struct Article {
 
 fn example() -> Result<(), Box<dyn Error>> {
     let mut csv_reader = csv::Reader::from_path("test.csv")?;
-
-    let articles: Vec<Article> = csv_reader
+    let (errors, articles): (Vec<_>, Vec<Article>) = csv_reader
         .deserialize()
-        .filter_map(|row| row.ok())
-        .collect();
+        .partition_map(|row| match row {
+            Err(e) => Left(e),
+            Ok(article) => Right(article)
+        });
+
     println!("{:#?}", articles);
+    println!("{:#?}", errors);
 
 
     Ok(())
