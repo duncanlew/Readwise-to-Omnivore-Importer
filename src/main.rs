@@ -41,18 +41,16 @@ fn get_imported_articles() -> Result<(Vec<Article>), Box<dyn Error>> {
     }
 }
 
-
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    // let imported_articles = get_imported_articles()
-    //     .unwrap_or_else(|err| {
-    //         eprintln!("{}", err);
-    //         process::exit(1);
-    //     });
-    //
-    // println!("Doing this from the main");
-    // imported_articles.iter().for_each(|article: &Article| println!("{:#?}", article));
+    let imported_articles = get_imported_articles()
+        .unwrap_or_else(|err| {
+            eprintln!("{}", err);
+            process::exit(1);
+        });
+
+    println!("Doing this from the main");
+    imported_articles.iter().for_each(|article: &Article| println!("{:#?}", article));
 
     let body = reqwest::get("https://www.rust-lang.org").await?
         .text().await?;
@@ -61,34 +59,3 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-
-// #[derive(Deserialize, Debug)]
-// struct User {
-//     login: String,
-//     id: u32,
-// }
-
-// #[derive(Deserialize, Debug)]
-// struct Product {
-//     id: u32,
-//     title: String,
-//     description: String,
-//     price: f32,
-//     discountPercentage: f32,
-//     rating: f32,
-//     stock: u32,
-//     brand: String,
-//     category: String,
-//     thumbnail: String,
-//     images: Vec<String>,
-// }
-// #[tokio::main]
-// async fn main() -> Result<(), Box<dyn Error>> {
-//     let request_url = "https://dummyjson.com/products/1";
-//     println!("{}", request_url);
-//     let response = reqwest::get(request_url).await?;
-//
-//     let result: Product = response.json().await?;
-//     println!("{:#?}", result);
-//     Ok(())
-// }
