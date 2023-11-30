@@ -3,6 +3,8 @@ use itertools::Either::Left;
 use itertools::Either::Right;
 use itertools::Itertools;
 use serde::Deserialize;
+use serde_json::json;
+use uuid::Uuid;
 
 #[derive(Debug, serde::Deserialize)]
 struct Article {
@@ -40,12 +42,34 @@ fn get_imported_articles() -> Result<(Vec<Article>), Box<dyn Error>> {
         Err("Errors occurred while reading the CSV".into())
     }
 }
+// curl -X POST -d '{ "query": "mutation SaveUrl($input: SaveUrlInput!) { saveUrl(input: $input) { ... on SaveSuccess { url clientRequestId } ... on SaveError { errorCodes message } } }", "variables": { "input": { "clientRequestId": "85282635-4DF4-4BFC-A3D4-B3A004E57067", "source": "api", "url": "https://blog.omnivore.app/p/contributing-to-omnivore" }} }' -H 'content-type: application/json' -H 'authorization: <your api key>' https://api-prod.omnivore.app/api/graphql
 
-async fn save_article() -> Result<(), Box<dyn Error>> {
-    let body = reqwest::get("https://www.rust-lang.org").await?
-        .text().await?;
+
+async fn save_article(article_url: String) -> Result<(), Box<dyn Error>> {
+    let payload = json!({
+        "query": "mutation SaveUrl($input: SaveUrlInput!) { saveUrl(input: $input) { ... on SaveSuccess { url clientRequestId } ... on SaveError { errorCodes message } } }",
+        "variables": {
+            "input": {
+                "clientRequestId": format!("{}", Uuid::new_v4()),
+                "source": "api",
+                "url": format!("{}", article_url)
+            }
+        }
+    });
+    // println!("Payload");
+    // println!("{}", payload.to_string());
+    let client = reqwest::Client::new();
+    let res = client.post("https://api-prod.omnivore.app/api/graphql")
+        .json(&payload)
+        .header("content-type", "application/json")
+        .header("authorization", "MY API KEY SHOULD BE HERE")
+        .send()
+        .await?;
+
+    // let body = reqwest::get("https://www.rust-lang.org").await?
+    //     .text().await?;
     println!("Let's print the body");
-    println!("{:#?}", body);
+    // println!("{:#?}", res);
 
     Ok(())
 }
@@ -61,7 +85,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("Doing this from the main");
     imported_articles.iter().for_each(|article: &Article| println!("{:#?}", article));
 
-    save_article().await
+    let article_url = imported_articles.get(0).unwrap().url.to_string();
+    save_article(article_url).await
         .unwrap_or_else(|error| {
             eprintln!("error occurred")
         });
