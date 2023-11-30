@@ -33,17 +33,12 @@ fn get_imported_articles() -> Result<(Vec<Article>), Box<dyn Error>> {
             Ok(article) => Right(article)
         });
 
-    // println!("{:#?}", articles);
-    // println!("{:#?}", errors);
-
     if errors.is_empty() {
         Ok(articles)
     } else {
         Err("Errors occurred while reading the CSV".into())
     }
 }
-// curl -X POST -d '{ "query": "mutation SaveUrl($input: SaveUrlInput!) { saveUrl(input: $input) { ... on SaveSuccess { url clientRequestId } ... on SaveError { errorCodes message } } }", "variables": { "input": { "clientRequestId": "85282635-4DF4-4BFC-A3D4-B3A004E57067", "source": "api", "url": "https://blog.omnivore.app/p/contributing-to-omnivore" }} }' -H 'content-type: application/json' -H 'authorization: <your api key>' https://api-prod.omnivore.app/api/graphql
-
 
 async fn save_article(article_url: String) -> Result<(), Box<dyn Error>> {
     let payload = json!({
@@ -69,7 +64,7 @@ async fn save_article(article_url: String) -> Result<(), Box<dyn Error>> {
     // let body = reqwest::get("https://www.rust-lang.org").await?
     //     .text().await?;
     println!("Let's print the body");
-    // println!("{:#?}", res);
+    println!("{:#?}", res);
 
     Ok(())
 }
