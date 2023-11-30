@@ -4,7 +4,6 @@ use itertools::Either::Right;
 use itertools::Itertools;
 use serde::Deserialize;
 use serde_json::json;
-use uuid::Uuid;
 
 #[derive(Debug, serde::Deserialize)]
 struct Article {
