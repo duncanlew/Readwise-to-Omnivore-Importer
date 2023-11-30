@@ -2,6 +2,7 @@ use std::{error::Error, io, process};
 use itertools::Either::Left;
 use itertools::Either::Right;
 use itertools::Itertools;
+use serde::Deserialize;
 
 #[derive(Debug, serde::Deserialize)]
 struct Article {
@@ -40,13 +41,54 @@ fn get_imported_articles() -> Result<(Vec<Article>), Box<dyn Error>> {
     }
 }
 
-fn main() {
-    let imported_articles = get_imported_articles()
-        .unwrap_or_else(|err| {
-            eprintln!("{}", err);
-            process::exit(1);
-        });
 
-    println!("Doing this from the main");
-    imported_articles.iter().for_each(|article: &Article| println!("{:#?}", article))
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
+    // let imported_articles = get_imported_articles()
+    //     .unwrap_or_else(|err| {
+    //         eprintln!("{}", err);
+    //         process::exit(1);
+    //     });
+    //
+    // println!("Doing this from the main");
+    // imported_articles.iter().for_each(|article: &Article| println!("{:#?}", article));
+
+    let body = reqwest::get("https://www.rust-lang.org").await?
+        .text().await?;
+    println!("Let's print the body");
+    println!("{:#?}", body);
+
+    Ok(())
 }
+
+// #[derive(Deserialize, Debug)]
+// struct User {
+//     login: String,
+//     id: u32,
+// }
+
+// #[derive(Deserialize, Debug)]
+// struct Product {
+//     id: u32,
+//     title: String,
+//     description: String,
+//     price: f32,
+//     discountPercentage: f32,
+//     rating: f32,
+//     stock: u32,
+//     brand: String,
+//     category: String,
+//     thumbnail: String,
+//     images: Vec<String>,
+// }
+// #[tokio::main]
+// async fn main() -> Result<(), Box<dyn Error>> {
+//     let request_url = "https://dummyjson.com/products/1";
+//     println!("{}", request_url);
+//     let response = reqwest::get(request_url).await?;
+//
+//     let result: Product = response.json().await?;
+//     println!("{:#?}", result);
+//     Ok(())
+// }
