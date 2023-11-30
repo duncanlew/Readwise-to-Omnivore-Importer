@@ -41,6 +41,15 @@ fn get_imported_articles() -> Result<(Vec<Article>), Box<dyn Error>> {
     }
 }
 
+async fn save_article() -> Result<(), Box<dyn Error>> {
+    let body = reqwest::get("https://www.rust-lang.org").await?
+        .text().await?;
+    println!("Let's print the body");
+    println!("{:#?}", body);
+
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let imported_articles = get_imported_articles()
@@ -52,10 +61,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("Doing this from the main");
     imported_articles.iter().for_each(|article: &Article| println!("{:#?}", article));
 
-    let body = reqwest::get("https://www.rust-lang.org").await?
-        .text().await?;
-    println!("Let's print the body");
-    println!("{:#?}", body);
+    save_article().await
+        .unwrap_or_else(|error| {
+            eprintln!("error occurred")
+        });
 
     Ok(())
 }
