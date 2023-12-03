@@ -1,9 +1,10 @@
-use std::{error::Error, io, process};
+use std::{error::Error, process};
 use itertools::Either::Left;
 use itertools::Either::Right;
 use itertools::Itertools;
 use serde::Deserialize;
 use serde_json::json;
+use uuid::Uuid;
 
 #[derive(Debug, serde::Deserialize)]
 struct Article {
@@ -46,24 +47,23 @@ async fn save_article(article_url: String) -> Result<(), Box<dyn Error>> {
             "input": {
                 "clientRequestId": format!("{}", Uuid::new_v4()),
                 "source": "api",
-                "url": format!("{}", article_url)
+                "url": format!("{}", article_url),
+                "labels": [{
+                    "name": "imported"
+                }]
             }
         }
     });
     // println!("Payload");
     // println!("{}", payload.to_string());
+
     let client = reqwest::Client::new();
-    let res = client.post("https://api-prod.omnivore.app/api/graphql")
+    client.post("https://api-prod.omnivore.app/api/graphql")
         .json(&payload)
         .header("content-type", "application/json")
         .header("authorization", "MY API KEY SHOULD BE HERE")
         .send()
         .await?;
-
-    // let body = reqwest::get("https://www.rust-lang.org").await?
-    //     .text().await?;
-    println!("Let's print the body");
-    println!("{:#?}", res);
 
     Ok(())
 }
@@ -76,8 +76,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
             process::exit(1);
         });
 
-    println!("Doing this from the main");
-    imported_articles.iter().for_each(|article: &Article| println!("{:#?}", article));
+    // println!("Doing this from the main");
+    // imported_articles.iter().for_each(|article: &Article| println!("{:#?}", article));
 
     let article_url = imported_articles.get(0).unwrap().url.to_string();
     save_article(article_url).await
@@ -85,5 +85,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
             eprintln!("error occurred")
         });
 
+    println!("Successfully imported csv into Omnivore");
     Ok(())
 }
