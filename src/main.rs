@@ -40,7 +40,7 @@ fn get_imported_articles() -> Result<(Vec<Article>), Box<dyn Error>> {
     }
 }
 
-async fn save_article(article_url: String) -> Result<(), Box<dyn Error>> {
+async fn save_url(article_url: String) -> Result<(), Box<dyn Error>> {
     let payload = json!({
         "query": "mutation SaveUrl($input: SaveUrlInput!) { saveUrl(input: $input) { ... on SaveSuccess { url clientRequestId } ... on SaveError { errorCodes message } } }",
         "variables": {
@@ -56,6 +56,41 @@ async fn save_article(article_url: String) -> Result<(), Box<dyn Error>> {
     });
     // println!("Payload");
     // println!("{}", payload.to_string());
+
+    let client = reqwest::Client::new();
+    let result = client.post("https://api-prod.omnivore.app/api/graphql")
+        .json(&payload)
+        .header("content-type", "application/json")
+        .header("authorization", "MY API KEY SHOULD BE HERE")
+        .send()
+        .await?;
+
+    let something = result.text().await?;
+    println!("Resulting body {:#?}", something);
+    Ok(())
+}
+
+async fn set_link_archived(article_url: String) -> Result<(), Box<dyn Error>> {
+    let payload = json!({
+        "query": "mutation SetLinkArchived($input: ArchiveLinkInput!) { \
+            setLinkArchived(input: $input) { \
+                ... on ArchiveLinkSuccess { linkId message } \
+                ... on ArchiveLinkError { message errorCodes } \
+                } \
+            }",
+        "variables": {
+            "input": {
+                "linkId": "",
+                "archived": true,
+                "clientRequestId": format!("{}", Uuid::new_v4()),
+                "source": "api",
+                "url": format!("{}", article_url),
+                "labels": [{
+                    "name": "imported"
+                }]
+            }
+        }
+    });
 
     let client = reqwest::Client::new();
     client.post("https://api-prod.omnivore.app/api/graphql")
@@ -80,7 +115,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // imported_articles.iter().for_each(|article: &Article| println!("{:#?}", article));
 
     let article_url = imported_articles.get(0).unwrap().url.to_string();
-    save_article(article_url).await
+    save_url(article_url).await
         .unwrap_or_else(|error| {
             eprintln!("error occurred")
         });
