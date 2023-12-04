@@ -48,6 +48,7 @@ async fn save_url(article_url: String) -> Result<(), Box<dyn Error>> {
                 "clientRequestId": format!("{}", Uuid::new_v4()),
                 "source": "api",
                 "url": format!("{}", article_url),
+                "state": "ARCHIVED",
                 "labels": [{
                     "name": "imported"
                 }]
@@ -64,7 +65,7 @@ async fn save_url(article_url: String) -> Result<(), Box<dyn Error>> {
         .header("authorization", "MY API KEY SHOULD BE HERE")
         .send()
         .await?;
-
+    // "{\"data\":{\"saveUrl\":{\"url\":\"https://omnivore.app/aquapika/links/f1b52de3-fe9e-48a0-8fc7-717b43e38531\",\"clientRequestId\":\"f1b52de3-fe9e-48a0-8fc7-717b43e38531\"}}}\n"
     let something = result.text().await?;
     println!("Resulting body {:#?}", something);
     Ok(())
