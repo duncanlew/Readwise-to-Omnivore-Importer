@@ -68,43 +68,8 @@ async fn save_url(article_url: String, is_archived: bool) -> Result<(), Box<dyn 
         .header("authorization", "MY API KEY SHOULD BE HERE")
         .send()
         .await?;
-    // "{\"data\":{\"saveUrl\":{\"url\":\"https://omnivore.app/aquapika/links/f1b52de3-fe9e-48a0-8fc7-717b43e38531\",\"clientRequestId\":\"f1b52de3-fe9e-48a0-8fc7-717b43e38531\"}}}\n"
-    let something = result.text().await?;
-    println!("Resulting body {:#?}", something);
-    Ok(())
-}
-
-// TODO this can be removed?
-async fn set_link_archived(article_url: String) -> Result<(), Box<dyn Error>> {
-    let payload = json!({
-        "query": "mutation SetLinkArchived($input: ArchiveLinkInput!) { \
-            setLinkArchived(input: $input) { \
-                ... on ArchiveLinkSuccess { linkId message } \
-                ... on ArchiveLinkError { message errorCodes } \
-                } \
-            }",
-        "variables": {
-            "input": {
-                "linkId": "",
-                "archived": true,
-                "clientRequestId": format!("{}", Uuid::new_v4()),
-                "source": "api",
-                "url": format!("{}", article_url),
-                "labels": [{
-                    "name": "imported"
-                }]
-            }
-        }
-    });
-
-    let client = reqwest::Client::new();
-    client.post("https://api-prod.omnivore.app/api/graphql")
-        .json(&payload)
-        .header("content-type", "application/json")
-        .header("authorization", "MY API KEY SHOULD BE HERE")
-        .send()
-        .await?;
-
+    let result_body = result.text().await?;
+    println!("Resulting body {:#?}", result_body);
     Ok(())
 }
 
