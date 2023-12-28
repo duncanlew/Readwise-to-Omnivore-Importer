@@ -5,6 +5,19 @@ use itertools::Itertools;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use uuid::Uuid;
+// use clap::Parser;
+
+// #[derive(Parser, Debug)]
+// // #[command(author, version, about, long_about = None)]
+// struct Args {
+//     /// Name of the person to greet
+//     #[arg(short, long)]
+//     key: String,
+//
+//     /// Number of times to greet
+//     #[arg(short, long, default_value_t = 1)]
+//     count: u8,
+// }
 
 #[derive(Debug, serde::Deserialize)]
 struct Article {
