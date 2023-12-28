@@ -1,10 +1,12 @@
 use std::{error::Error, process};
+use std::process::exit;
 use itertools::Either::Left;
 use itertools::Either::Right;
 use itertools::Itertools;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use uuid::Uuid;
+use log::error;
 // use clap::Parser;
 
 // #[derive(Parser, Debug)]
@@ -81,10 +83,26 @@ async fn save_url(article_url: String, saved_date: String, is_archived: bool) ->
         .header("content-type", "application/json")
         .header("authorization", "MY API KEY SHOULD BE HERE")
         .send()
-        .await?;
-    let result_body = result.text().await?;
-    println!("Resulting body {:#?}", result_body);
-    Ok(())
+        .await;
+
+    match result {
+        Ok(response) => {
+            if response.status().is_success() {
+                let result_body = response.text().await?;
+                println!("Resulting body {:#?}", result_body);
+                Ok(())
+            } else {
+                let status = response.status();
+                let message = response.text().await?;
+                let error_message = format!("Server returned the code [{}] and message [{}]", status, message);
+                Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, error_message)))
+            }
+        }
+        Err(error) => {
+            let message = format!("Error while processing request: {}", error);
+            Err(Box::new(error))
+        }
+    }
 }
 
 #[tokio::main]
@@ -92,7 +110,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let imported_articles = get_imported_articles()
         .unwrap_or_else(|err| {
             eprintln!("{}", err);
-            process::exit(1);
+            exit(1);
         });
 
     // println!("Doing this from the main");
@@ -102,7 +120,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let saved_date = imported_articles.get(0).unwrap().saved_date.to_string();
     save_url(article_url, saved_date, false).await
         .unwrap_or_else(|error| {
-            eprintln!("error occurred")
+            eprintln!("Error has occurred during the saving of URLs into Omnivore:\n{}", error);
+            exit(1);
         });
 
     println!("Successfully imported csv into Omnivore");
