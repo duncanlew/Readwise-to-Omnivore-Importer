@@ -55,13 +55,14 @@ fn get_imported_articles() -> Result<(Vec<Article>), Box<dyn Error>> {
     }
 }
 
-async fn save_url(article_url: String, saved_date: String, is_archived: bool) -> Result<(), Box<dyn Error>> {
+async fn save_url(key: String, article_url: String, saved_date: String, is_archived: bool) -> Result<(), Box<dyn Error>> {
     let mut input_map = serde_json::Map::new();
 
     input_map.insert("clientRequestId".to_string(), Value::String(format!("{}", Uuid::new_v4())));
     input_map.insert("source".to_string(), Value::String("api".to_string()));
     input_map.insert("url".to_string(), Value::String(format!("{}", article_url)));
-    input_map.insert("savedAt".to_string(), Value::String(format!("{}", saved_date)));
+    // TODO place this back
+    // input_map.insert("savedAt".to_string(), Value::String(format!("{}", saved_date)));
     input_map.insert("labels".to_string(), json!([{"name": "imported"}]));
     if is_archived {
         input_map.insert("state".to_string(), Value::String("ARCHIVED".to_string()));
@@ -81,7 +82,7 @@ async fn save_url(article_url: String, saved_date: String, is_archived: bool) ->
     let result = client.post("https://api-prod.omnivore.app/api/graphql")
         .json(&payload)
         .header("content-type", "application/json")
-        .header("authorization", "MY API KEY SHOULD BE HERE")
+        .header("authorization", key)
         .send()
         .await;
 
@@ -122,7 +123,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let article_url = imported_articles.get(0).unwrap().url.to_string();
     let saved_date = imported_articles.get(0).unwrap().saved_date.to_string();
-    save_url(article_url, saved_date, true).await
+    save_url(arguments.key, article_url, saved_date, true).await
         .unwrap_or_else(|error| {
             eprintln!("Error has occurred during the saving of URLs into Omnivore:\n{}", error);
             exit(1);
