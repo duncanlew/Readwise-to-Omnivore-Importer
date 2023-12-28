@@ -100,8 +100,8 @@ async fn save_url(article_url: String, saved_date: String, is_archived: bool) ->
             }
         }
         Err(error) => {
-            let message = format!("Error while processing request: {}", error);
-            Err(message.into())
+            let error_message = format!("Error while processing request: {}", error);
+            Err(error_message.into())
         }
     }
 }
