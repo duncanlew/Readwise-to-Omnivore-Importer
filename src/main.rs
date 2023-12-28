@@ -95,7 +95,7 @@ async fn save_url(article_url: String, saved_date: String, is_archived: bool) ->
             } else {
                 let status = response.status();
                 let text = response.text().await?;
-                let error_message = format!("Server returned the code [{}] and message [{}]", status, text);
+                let error_message = format!("Server returned the code \"{}\" and the message {}", status, text);
                 Err(error_message.into())
             }
         }
