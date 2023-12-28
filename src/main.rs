@@ -1,4 +1,4 @@
-use std::{error::Error, process};
+use std::{error::Error};
 use std::process::exit;
 use itertools::Either::Left;
 use itertools::Either::Right;
@@ -6,20 +6,20 @@ use itertools::Itertools;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use uuid::Uuid;
-use log::error;
-// use clap::Parser;
+use clap::Parser;
 
-// #[derive(Parser, Debug)]
-// // #[command(author, version, about, long_about = None)]
-// struct Args {
-//     /// Name of the person to greet
-//     #[arg(short, long)]
-//     key: String,
-//
-//     /// Number of times to greet
-//     #[arg(short, long, default_value_t = 1)]
-//     count: u8,
-// }
+#[derive(Parser, Default, Debug)]
+#[clap(author="Duncan Lew", version, about)]
+/// A Readwise to Omnivore importer
+struct Arguments {
+    #[clap(short, long)]
+    /// API key for Omnivore
+    key: String,
+
+    #[clap(short, long)]
+    /// File path for the CSV file
+    file_path: String,
+}
 
 #[derive(Debug, serde::Deserialize)]
 struct Article {
@@ -108,6 +108,9 @@ async fn save_url(article_url: String, saved_date: String, is_archived: bool) ->
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    let arguments = Arguments::parse();
+    println!("{:?}", arguments);
+
     let imported_articles = get_imported_articles()
         .unwrap_or_else(|err| {
             eprintln!("{}", err);
@@ -119,7 +122,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let article_url = imported_articles.get(0).unwrap().url.to_string();
     let saved_date = imported_articles.get(0).unwrap().saved_date.to_string();
-    save_url(article_url, saved_date, false).await
+    save_url(article_url, saved_date, true).await
         .unwrap_or_else(|error| {
             eprintln!("Error has occurred during the saving of URLs into Omnivore:\n{}", error);
             exit(1);
