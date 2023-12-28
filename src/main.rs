@@ -1,10 +1,25 @@
-use std::{error::Error, process};
+use std::{error::Error};
+use std::process::exit;
 use itertools::Either::Left;
 use itertools::Either::Right;
 use itertools::Itertools;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use uuid::Uuid;
+use clap::Parser;
+
+#[derive(Parser, Default, Debug)]
+#[clap(author="Duncan Lew", version, about)]
+/// A Readwise to Omnivore importer
+struct Arguments {
+    #[clap(short, long)]
+    /// API key for Omnivore
+    key: String,
+
+    #[clap(short, long)]
+    /// File path for the CSV file
+    file_path: String,
+}
 
 #[derive(Debug, serde::Deserialize)]
 struct Article {
@@ -24,8 +39,8 @@ struct Article {
     seen: String,
 }
 
-fn get_imported_articles() -> Result<(Vec<Article>), Box<dyn Error>> {
-    let mut csv_reader = csv::Reader::from_path("test.csv")?;
+fn get_imported_articles(file_path: String) -> Result<(Vec<Article>), Box<dyn Error>> {
+    let mut csv_reader = csv::Reader::from_path(file_path)?;
     let (errors, articles): (Vec<csv::Error>, Vec<Article>) = csv_reader
         .deserialize()
         .partition_map(|row| match row {
@@ -40,13 +55,14 @@ fn get_imported_articles() -> Result<(Vec<Article>), Box<dyn Error>> {
     }
 }
 
-async fn save_url(article_url: String, saved_date: String, is_archived: bool) -> Result<(), Box<dyn Error>> {
+async fn save_url(key: String, article_url: String, saved_date: String, is_archived: bool) -> Result<(), Box<dyn Error>> {
     let mut input_map = serde_json::Map::new();
 
     input_map.insert("clientRequestId".to_string(), Value::String(format!("{}", Uuid::new_v4())));
     input_map.insert("source".to_string(), Value::String("api".to_string()));
     input_map.insert("url".to_string(), Value::String(format!("{}", article_url)));
-    input_map.insert("savedAt".to_string(), Value::String(format!("{}", saved_date)));
+    // TODO place this back
+    // input_map.insert("savedAt".to_string(), Value::String(format!("{}", saved_date)));
     input_map.insert("labels".to_string(), json!([{"name": "imported"}]));
     if is_archived {
         input_map.insert("state".to_string(), Value::String("ARCHIVED".to_string()));
@@ -66,20 +82,39 @@ async fn save_url(article_url: String, saved_date: String, is_archived: bool) ->
     let result = client.post("https://api-prod.omnivore.app/api/graphql")
         .json(&payload)
         .header("content-type", "application/json")
-        .header("authorization", "MY API KEY SHOULD BE HERE")
+        .header("authorization", key)
         .send()
-        .await?;
-    let result_body = result.text().await?;
-    println!("Resulting body {:#?}", result_body);
-    Ok(())
+        .await;
+
+    match result {
+        Ok(response) => {
+            if response.status().is_success() {
+                // TODO remove these two lines at the end
+                let result_body = response.text().await?;
+                println!("Resulting body {:#?}", result_body);
+                Ok(())
+            } else {
+                let status = response.status();
+                let text = response.text().await?;
+                let error_message = format!("Server returned the code \"{}\" and the message {}", status, text);
+                Err(error_message.into())
+            }
+        }
+        Err(error) => {
+            let error_message = format!("Error while processing request: {}", error);
+            Err(error_message.into())
+        }
+    }
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let imported_articles = get_imported_articles()
+    let arguments = Arguments::parse();
+
+    let imported_articles = get_imported_articles(arguments.file_path)
         .unwrap_or_else(|err| {
             eprintln!("{}", err);
-            process::exit(1);
+            exit(1);
         });
 
     // println!("Doing this from the main");
@@ -87,9 +122,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let article_url = imported_articles.get(0).unwrap().url.to_string();
     let saved_date = imported_articles.get(0).unwrap().saved_date.to_string();
-    save_url(article_url, saved_date, false).await
+    save_url(arguments.key, article_url, saved_date, true).await
         .unwrap_or_else(|error| {
-            eprintln!("error occurred")
+            eprintln!("Error has occurred during the saving of URLs into Omnivore:\n{}", error);
+            exit(1);
         });
 
     println!("Successfully imported csv into Omnivore");
