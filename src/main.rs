@@ -110,7 +110,6 @@ async fn save_url(key: String, article_url: String, saved_date: String, is_archi
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let arguments = Arguments::parse();
-    println!("{:?}", arguments);
 
     let imported_articles = get_imported_articles(arguments.file_path)
         .unwrap_or_else(|err| {
