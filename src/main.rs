@@ -88,19 +88,20 @@ async fn save_url(article_url: String, saved_date: String, is_archived: bool) ->
     match result {
         Ok(response) => {
             if response.status().is_success() {
+                // TODO remove these two lines at the end
                 let result_body = response.text().await?;
                 println!("Resulting body {:#?}", result_body);
                 Ok(())
             } else {
                 let status = response.status();
-                let message = response.text().await?;
-                let error_message = format!("Server returned the code [{}] and message [{}]", status, message);
-                Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, error_message)))
+                let text = response.text().await?;
+                let error_message = format!("Server returned the code [{}] and message [{}]", status, text);
+                Err(error_message.into())
             }
         }
         Err(error) => {
             let message = format!("Error while processing request: {}", error);
-            Err(Box::new(error))
+            Err(message.into())
         }
     }
 }
