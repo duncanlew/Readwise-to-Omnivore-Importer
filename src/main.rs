@@ -39,8 +39,8 @@ struct Article {
     seen: String,
 }
 
-fn get_imported_articles() -> Result<(Vec<Article>), Box<dyn Error>> {
-    let mut csv_reader = csv::Reader::from_path("test.csv")?;
+fn get_imported_articles(file_path: String) -> Result<(Vec<Article>), Box<dyn Error>> {
+    let mut csv_reader = csv::Reader::from_path(file_path)?;
     let (errors, articles): (Vec<csv::Error>, Vec<Article>) = csv_reader
         .deserialize()
         .partition_map(|row| match row {
@@ -112,7 +112,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let arguments = Arguments::parse();
     println!("{:?}", arguments);
 
-    let imported_articles = get_imported_articles()
+    let imported_articles = get_imported_articles(arguments.file_path)
         .unwrap_or_else(|err| {
             eprintln!("{}", err);
             exit(1);
