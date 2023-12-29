@@ -9,7 +9,7 @@ use uuid::Uuid;
 use clap::Parser;
 
 #[derive(Parser, Default, Debug)]
-#[clap(author="Duncan Lew", version, about)]
+#[clap(author = "Duncan Lew", version, about)]
 /// A Readwise to Omnivore importer
 struct Arguments {
     #[clap(short, long)]
@@ -39,7 +39,7 @@ struct Article {
     seen: String,
 }
 
-fn get_imported_articles(file_path: String) -> Result<(Vec<Article>), Box<dyn Error>> {
+fn get_imported_articles(file_path: String) -> Result<Vec<Article>, Box<dyn Error>> {
     let mut csv_reader = csv::Reader::from_path(file_path)?;
     let (errors, articles): (Vec<csv::Error>, Vec<Article>) = csv_reader
         .deserialize()
@@ -57,7 +57,6 @@ fn get_imported_articles(file_path: String) -> Result<(Vec<Article>), Box<dyn Er
 
 async fn save_url(key: String, article_url: String, saved_date: String, is_archived: bool) -> Result<(), Box<dyn Error>> {
     let mut input_map = serde_json::Map::new();
-
     input_map.insert("clientRequestId".to_string(), Value::String(format!("{}", Uuid::new_v4())));
     input_map.insert("source".to_string(), Value::String("api".to_string()));
     input_map.insert("url".to_string(), Value::String(format!("{}", article_url)));
@@ -69,14 +68,16 @@ async fn save_url(key: String, article_url: String, saved_date: String, is_archi
     }
 
     let payload = json!({
-        "query": "mutation SaveUrl($input: SaveUrlInput!) { saveUrl(input: $input) { ... on SaveSuccess { url clientRequestId } ... on SaveError { errorCodes message } } }",
+        "query": "mutation SaveUrl($input: SaveUrlInput!) { \
+            saveUrl(input: $input) { \
+                ... on SaveSuccess { url clientRequestId } \
+                ... on SaveError { errorCodes message } \
+                } \
+            }",
         "variables": {
             "input": input_map
         }
     });
-
-    // println!("Payload");
-    // println!("{}", payload.to_string());
 
     let client = reqwest::Client::new();
     let result = client.post("https://api-prod.omnivore.app/api/graphql")
