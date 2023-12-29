@@ -57,6 +57,26 @@ fn get_imported_articles(file_path: String) -> Result<Vec<Article>, Box<dyn Erro
     }
 }
 
+async fn save_urls(key: String, imported_articles: Vec<Article>) {
+    let atomic_key = Arc::new(key);
+    stream::iter(imported_articles)
+        .for_each_concurrent(None, |article| {
+            let key = Arc::clone(&atomic_key).to_string();
+            async move {
+                let article_url = article.url.to_string();
+                let saved_date = article.saved_date.to_string();
+                let location = article.location.to_string();
+                let is_archived = location == "archive";
+                save_url(key, article_url, saved_date, is_archived)
+                    .await
+                    .unwrap_or_else(|error| {
+                        eprintln!("Error has occurred during the saving of URLs into Omnivore:\n{}", error);
+                    });
+            }
+        })
+        .await;
+}
+
 async fn save_url(key: String, article_url: String, saved_date: String, is_archived: bool) -> Result<(), Box<dyn Error>> {
     let payload = json!({
         "query": "mutation SaveUrl($input: SaveUrlInput!) { \
@@ -116,7 +136,6 @@ fn create_input(article_url: String, is_archived: bool) -> Map<String, Value> {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let arguments = Arguments::parse();
-    let key = Arc::new(arguments.key);
 
     let imported_articles = get_imported_articles(arguments.file_path)
         .unwrap_or_else(|err| {
@@ -124,22 +143,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             exit(1);
         });
 
-    stream::iter(imported_articles)
-        .for_each_concurrent(None, |article| {
-            let key = Arc::clone(&key);
-            async move {
-                let article_url = article.url.to_string();
-                let saved_date = article.saved_date.to_string();
-                let location = article.location.to_string();
-                let is_archived = location == "archive";
-                save_url(key.to_string(), article_url, saved_date, is_archived)
-                    .await
-                    .unwrap_or_else(|error| {
-                        eprintln!("Error has occurred during the saving of URLs into Omnivore:\n{}", error);
-                    });
-            }
-        })
-        .await;
+    save_urls(arguments.key, imported_articles).await;
 
     println!("Successfully imported csv into Omnivore");
     Ok(())
