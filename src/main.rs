@@ -1,5 +1,6 @@
 use std::{error::Error};
 use std::process::exit;
+use std::sync::Arc;
 use itertools::Either::Left;
 use itertools::Either::Right;
 use itertools::Itertools;
@@ -7,6 +8,8 @@ use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use uuid::Uuid;
 use clap::Parser;
+use futures::{stream, StreamExt};
+use reqwest::Client;
 
 #[derive(Parser, Default, Debug)]
 #[clap(author = "Duncan Lew", version, about)]
@@ -55,7 +58,30 @@ fn get_imported_articles(file_path: String) -> Result<Vec<Article>, Box<dyn Erro
     }
 }
 
-async fn save_url(key: String, article_url: String, saved_date: String, is_archived: bool) -> Result<(), Box<dyn Error>> {
+async fn save_urls(key: String, imported_articles: Vec<Article>) {
+    let atomic_key = Arc::new(key);
+    let client = Client::new();
+    stream::iter(imported_articles)
+        .for_each_concurrent(None, |article| {
+            let key = Arc::clone(&atomic_key).to_string();
+            let client = client.clone();
+            async move {
+                let article_url = article.url.to_string();
+                let saved_date = article.saved_date.to_string();
+                let location = article.location.to_string();
+                let is_archived = location == "archive";
+                // TODO extract the input over here instead of passing around all the arguments
+                save_url(key, article_url, saved_date, is_archived, client)
+                    .await
+                    .unwrap_or_else(|error| {
+                        eprintln!("Error has occurred during the saving of URLs into Omnivore:\n{}", error);
+                    });
+            }
+        })
+        .await;
+}
+
+async fn save_url(key: String, article_url: String, saved_date: String, is_archived: bool, client: Client) -> Result<(), Box<dyn Error>> {
     let payload = json!({
         "query": "mutation SaveUrl($input: SaveUrlInput!) { \
             saveUrl(input: $input) { \
@@ -68,7 +94,6 @@ async fn save_url(key: String, article_url: String, saved_date: String, is_archi
         }
     });
 
-    let client = reqwest::Client::new();
     let result = client.post("https://api-prod.omnivore.app/api/graphql")
         .json(&payload)
         .header("content-type", "application/json")
@@ -121,16 +146,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             exit(1);
         });
 
-    // println!("Doing this from the main");
-    // imported_articles.iter().for_each(|article: &Article| println!("{:#?}", article));
-
-    let article_url = imported_articles.get(0).unwrap().url.to_string();
-    let saved_date = imported_articles.get(0).unwrap().saved_date.to_string();
-    save_url(arguments.key, article_url, saved_date, true).await
-        .unwrap_or_else(|error| {
-            eprintln!("Error has occurred during the saving of URLs into Omnivore:\n{}", error);
-            exit(1);
-        });
+    save_urls(arguments.key, imported_articles).await;
 
     println!("Successfully imported csv into Omnivore");
     Ok(())
