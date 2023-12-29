@@ -70,6 +70,7 @@ async fn save_urls(key: String, imported_articles: Vec<Article>) {
                 let saved_date = article.saved_date.to_string();
                 let location = article.location.to_string();
                 let is_archived = location == "archive";
+                // TODO extract the input over here instead of passing around all the arguments
                 save_url(key, article_url, saved_date, is_archived, client)
                     .await
                     .unwrap_or_else(|error| {
