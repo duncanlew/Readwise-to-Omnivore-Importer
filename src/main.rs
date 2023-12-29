@@ -9,6 +9,7 @@ use serde_json::{json, Map, Value};
 use uuid::Uuid;
 use clap::Parser;
 use futures::{stream, StreamExt};
+use reqwest::Client;
 
 #[derive(Parser, Default, Debug)]
 #[clap(author = "Duncan Lew", version, about)]
@@ -59,15 +60,17 @@ fn get_imported_articles(file_path: String) -> Result<Vec<Article>, Box<dyn Erro
 
 async fn save_urls(key: String, imported_articles: Vec<Article>) {
     let atomic_key = Arc::new(key);
+    let client = Client::new();
     stream::iter(imported_articles)
         .for_each_concurrent(None, |article| {
             let key = Arc::clone(&atomic_key).to_string();
+            let client = client.clone();
             async move {
                 let article_url = article.url.to_string();
                 let saved_date = article.saved_date.to_string();
                 let location = article.location.to_string();
                 let is_archived = location == "archive";
-                save_url(key, article_url, saved_date, is_archived)
+                save_url(key, article_url, saved_date, is_archived, client)
                     .await
                     .unwrap_or_else(|error| {
                         eprintln!("Error has occurred during the saving of URLs into Omnivore:\n{}", error);
@@ -77,7 +80,7 @@ async fn save_urls(key: String, imported_articles: Vec<Article>) {
         .await;
 }
 
-async fn save_url(key: String, article_url: String, saved_date: String, is_archived: bool) -> Result<(), Box<dyn Error>> {
+async fn save_url(key: String, article_url: String, saved_date: String, is_archived: bool, client: Client) -> Result<(), Box<dyn Error>> {
     let payload = json!({
         "query": "mutation SaveUrl($input: SaveUrlInput!) { \
             saveUrl(input: $input) { \
@@ -90,7 +93,6 @@ async fn save_url(key: String, article_url: String, saved_date: String, is_archi
         }
     });
 
-    let client = reqwest::Client::new();
     let result = client.post("https://api-prod.omnivore.app/api/graphql")
         .json(&payload)
         .header("content-type", "application/json")
