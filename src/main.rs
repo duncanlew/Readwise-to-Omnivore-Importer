@@ -1,5 +1,6 @@
 use std::{error::Error};
 use std::process::exit;
+use std::sync::Arc;
 use itertools::Either::Left;
 use itertools::Either::Right;
 use itertools::Itertools;
@@ -7,6 +8,7 @@ use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use uuid::Uuid;
 use clap::Parser;
+use futures::{stream, StreamExt};
 
 #[derive(Parser, Default, Debug)]
 #[clap(author = "Duncan Lew", version, about)]
@@ -114,6 +116,7 @@ fn create_input(article_url: String, is_archived: bool) -> Map<String, Value> {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let arguments = Arguments::parse();
+    let key = Arc::new(arguments.key);
 
     let imported_articles = get_imported_articles(arguments.file_path)
         .unwrap_or_else(|err| {
@@ -121,16 +124,26 @@ async fn main() -> Result<(), Box<dyn Error>> {
             exit(1);
         });
 
-    // println!("Doing this from the main");
-    // imported_articles.iter().for_each(|article: &Article| println!("{:#?}", article));
-
-    let article_url = imported_articles.get(0).unwrap().url.to_string();
-    let saved_date = imported_articles.get(0).unwrap().saved_date.to_string();
-    save_url(arguments.key, article_url, saved_date, true).await
-        .unwrap_or_else(|error| {
-            eprintln!("Error has occurred during the saving of URLs into Omnivore:\n{}", error);
-            exit(1);
-        });
+    println!("Doing this from the main");
+    stream::iter(imported_articles)
+        .for_each_concurrent(None, |article| {
+            let key = Arc::clone(&key);
+            async move {
+                println!("{:#?}", article);
+                let article_url = article.url.to_string();
+                let saved_date = article.saved_date.to_string();
+                let location = article.location.to_string();
+                let is_archived = location == "archive";
+                println!("isArchived: {}", is_archived);
+                save_url(key.to_string(), article_url, saved_date, is_archived)
+                    .await
+                    .unwrap_or_else(|error| {
+                        eprintln!("Error has occurred during the saving of URLs into Omnivore:\n{}", error);
+                        exit(1);
+                    });
+            }
+        })
+        .await;
 
     println!("Successfully imported csv into Omnivore");
     Ok(())
