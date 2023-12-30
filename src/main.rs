@@ -23,6 +23,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         });
 
     let results = omnivore_lib::save_urls(arguments.key, imported_articles).await;
+    // TODO remove these lines
     println!("\n*************************\nDone with async requests in the main function");
     println!("{:#?}", results);
 
