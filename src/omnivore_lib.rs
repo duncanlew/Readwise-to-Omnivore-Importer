@@ -44,7 +44,8 @@ pub async fn save_urls(key: String, imported_articles: Vec<Article>) -> Vec<Impo
                     }
                 }
             }
-        }).collect()
+        })
+        .collect()
         .await
 }
 
