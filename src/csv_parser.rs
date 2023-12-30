@@ -5,7 +5,7 @@ use itertools::Itertools;
 
 use crate::structs::Article;
 
-pub fn get_imported_articles(file_path: String) -> Result<Vec<Article>, Box<dyn Error>> {
+pub fn get_imported_articles(file_path: &str) -> Result<Vec<Article>, Box<dyn Error>> {
     let mut csv_reader = csv::Reader::from_path(file_path)?;
     let (errors, articles): (Vec<csv::Error>, Vec<Article>) = csv_reader
         .deserialize()
