@@ -1,6 +1,8 @@
 use std::error::Error;
+
 use itertools::Either::{Left, Right};
 use itertools::Itertools;
+
 use crate::structs::Article;
 
 pub fn get_imported_articles(file_path: String) -> Result<Vec<Article>, Box<dyn Error>> {

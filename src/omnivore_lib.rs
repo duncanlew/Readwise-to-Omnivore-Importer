@@ -1,9 +1,11 @@
-use std::sync::Arc;
-use reqwest::Client;
-use futures::{stream, StreamExt};
-use serde_json::{json, Map, Value};
 use std::error::Error;
+use std::sync::Arc;
+
+use futures::{stream, StreamExt};
+use reqwest::Client;
+use serde_json::{json, Map, Value};
 use uuid::Uuid;
+
 use crate::structs::Article;
 
 pub async fn save_urls(key: String, imported_articles: Vec<Article>) {

@@ -1,14 +1,16 @@
+use std::error::Error;
+use std::process::exit;
+
+use clap::Parser;
+use futures::StreamExt;
+use itertools::Itertools;
+use serde::Deserialize;
+
+use crate::structs::Arguments;
+
 mod structs;
 mod csv_parser;
 mod omnivore_lib;
-
-use std::error::Error;
-use std::process::exit;
-use itertools::Itertools;
-use serde::Deserialize;
-use clap::Parser;
-use futures::StreamExt;
-use crate::structs::Arguments;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
