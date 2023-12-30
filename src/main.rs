@@ -70,8 +70,9 @@ async fn save_urls(key: String, imported_articles: Vec<Article>) {
                 let saved_date = article.saved_date.to_string();
                 let location = article.location.to_string();
                 let is_archived = location == "archive";
-                // TODO extract the input over here instead of passing around all the arguments
-                save_url(key, article_url, saved_date, is_archived, client)
+                let input = create_input(article_url, saved_date, is_archived);
+
+                save_url(input, key, client)
                     .await
                     .unwrap_or_else(|error| {
                         eprintln!("Error has occurred during the saving of URLs into Omnivore:\n{}", error);
@@ -81,7 +82,7 @@ async fn save_urls(key: String, imported_articles: Vec<Article>) {
         .await;
 }
 
-async fn save_url(key: String, article_url: String, saved_date: String, is_archived: bool, client: Client) -> Result<(), Box<dyn Error>> {
+async fn save_url(input: Map<String, Value>, key: String, client: Client) -> Result<(), Box<dyn Error>> {
     let payload = json!({
         "query": "mutation SaveUrl($input: SaveUrlInput!) { \
             saveUrl(input: $input) { \
@@ -90,7 +91,7 @@ async fn save_url(key: String, article_url: String, saved_date: String, is_archi
                 } \
             }",
         "variables": {
-            "input": create_input(article_url, is_archived)
+            "input": input
         }
     });
 
@@ -122,7 +123,7 @@ async fn save_url(key: String, article_url: String, saved_date: String, is_archi
     }
 }
 
-fn create_input(article_url: String, is_archived: bool) -> Map<String, Value> {
+fn create_input(article_url: String, saved_date: String, is_archived: bool) -> Map<String, Value> {
     let mut input_map = serde_json::Map::new();
     input_map.insert("clientRequestId".to_string(), Value::String(format!("{}", Uuid::new_v4())));
     input_map.insert("source".to_string(), Value::String("api".to_string()));
