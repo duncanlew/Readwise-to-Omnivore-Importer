@@ -30,3 +30,10 @@ pub struct Article {
     #[serde(rename(deserialize = "Seen"))]
     pub(crate) seen: String,
 }
+
+#[derive(Debug)]
+pub struct ImportedArticle {
+    pub(crate) url: String,
+    pub(crate) successful: bool,
+    pub(crate) error: Option<String>,
+}
