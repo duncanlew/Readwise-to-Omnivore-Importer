@@ -20,19 +20,29 @@ pub async fn save_urls(key: String, imported_articles: Vec<Article>) {
                 let saved_date = article.saved_date.to_string();
                 let location = article.location.to_string();
                 let is_archived = location == "archive";
-                let input = create_input(article_url, saved_date, is_archived);
+                let input = create_input(&article_url, &saved_date, is_archived);
 
-                save_url(input, key, client)
+                let is_valid_url = check_valid_url(&client, &article_url)
                     .await
                     .unwrap_or_else(|error| {
-                        eprintln!("Error has occurred during the saving of URLs into Omnivore:\n{}", error);
+                        eprintln!("Error occurred for checking url: {}", error);
+                        false
                     });
+
+                println!("The url for {} was valid: {}", article.title, is_valid_url);
+                if is_valid_url {
+                    save_url(input, key, &client)
+                        .await
+                        .unwrap_or_else(|error| {
+                            eprintln!("Error has occurred during the saving of URLs into Omnivore:\n{}", error);
+                        });
+                }
             }
         })
         .await;
 }
 
-fn create_input(article_url: String, saved_date: String, is_archived: bool) -> Map<String, Value> {
+fn create_input(article_url: &str, saved_date: &str, is_archived: bool) -> Map<String, Value> {
     let mut input_map = serde_json::Map::new();
     input_map.insert("clientRequestId".to_string(), Value::String(format!("{}", Uuid::new_v4())));
     input_map.insert("source".to_string(), Value::String("api".to_string()));
@@ -46,7 +56,12 @@ fn create_input(article_url: String, saved_date: String, is_archived: bool) -> M
     input_map
 }
 
-async fn save_url(input: Map<String, Value>, key: String, client: Client) -> Result<(), Box<dyn Error>> {
+async fn check_valid_url(client: &Client, article_url: &str) -> Result<bool, reqwest::Error> {
+    let response = client.get(article_url).send().await?;
+    Ok(response.status().is_success())
+}
+
+async fn save_url(input: Map<String, Value>, key: String, client: &Client) -> Result<(), Box<dyn Error>> {
     let payload = json!({
         "query": "mutation SaveUrl($input: SaveUrlInput!) { \
             saveUrl(input: $input) { \

@@ -16,17 +16,17 @@ pub struct Arguments {
 #[derive(Debug, serde::Deserialize)]
 pub struct Article {
     #[serde(rename(deserialize = "Title"))]
-    title: String,
+    pub(crate) title: String,
     #[serde(rename(deserialize = "URL"))]
     pub(crate) url: String,
     #[serde(rename(deserialize = "Document tags"))]
-    document_tags: String,
+    pub(crate) document_tags: String,
     #[serde(rename(deserialize = "Saved date"))]
     pub(crate) saved_date: String,
     #[serde(rename(deserialize = "Reading progress"))]
-    reading_progress: String,
+    pub(crate) reading_progress: String,
     #[serde(rename(deserialize = "Location"))]
     pub(crate) location: String,
     #[serde(rename(deserialize = "Seen"))]
-    seen: String,
+    pub(crate) seen: String,
 }
