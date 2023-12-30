@@ -1,10 +1,9 @@
 mod structs;
+mod csv_parser;
 
-use std::{error::Error};
+use std::error::Error;
 use std::process::exit;
 use std::sync::Arc;
-use itertools::Either::Left;
-use itertools::Either::Right;
 use itertools::Itertools;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
@@ -13,23 +12,6 @@ use clap::Parser;
 use futures::{stream, StreamExt};
 use reqwest::Client;
 use crate::structs::{Arguments, Article};
-
-
-fn get_imported_articles(file_path: String) -> Result<Vec<Article>, Box<dyn Error>> {
-    let mut csv_reader = csv::Reader::from_path(file_path)?;
-    let (errors, articles): (Vec<csv::Error>, Vec<Article>) = csv_reader
-        .deserialize()
-        .partition_map(|row| match row {
-            Err(e) => Left(e),
-            Ok(article) => Right(article)
-        });
-
-    if errors.is_empty() {
-        Ok(articles)
-    } else {
-        Err("Errors occurred while reading the CSV".into())
-    }
-}
 
 async fn save_urls(key: String, imported_articles: Vec<Article>) {
     let atomic_key = Arc::new(key);
@@ -114,7 +96,7 @@ fn create_input(article_url: String, saved_date: String, is_archived: bool) -> M
 async fn main() -> Result<(), Box<dyn Error>> {
     let arguments = Arguments::parse();
 
-    let imported_articles = get_imported_articles(arguments.file_path)
+    let imported_articles = csv_parser::get_imported_articles(arguments.file_path)
         .unwrap_or_else(|err| {
             eprintln!("{}", err);
             exit(1);
