@@ -15,7 +15,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let imported_articles = csv_parser::get_imported_articles(arguments.file_path)
         .unwrap_or_else(|err| {
-            eprintln!("{}", err);
+            eprintln!("Error occurred: {}\nExiting application", err);
             exit(1);
         });
 
