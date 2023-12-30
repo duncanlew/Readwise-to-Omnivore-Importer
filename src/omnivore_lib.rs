@@ -58,7 +58,6 @@ fn create_input(article_url: &str, saved_date: &str, is_archived: bool) -> Map<S
 
 async fn check_valid_url(client: &Client, article_url: &str) -> Result<bool, reqwest::Error> {
     let response = client.get(article_url).send().await?;
-    // TODO add error handling over here
     Ok(response.status().is_success())
 }
 
