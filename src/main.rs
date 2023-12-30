@@ -2,9 +2,6 @@ use std::error::Error;
 use std::process::exit;
 
 use clap::Parser;
-use futures::StreamExt;
-use itertools::Itertools;
-use serde::Deserialize;
 
 use crate::structs::Arguments;
 
