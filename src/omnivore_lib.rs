@@ -44,7 +44,7 @@ pub async fn save_urls(key: String, imported_articles: Vec<Article>) {
 
 fn create_input(article_url: &str, saved_date: &str, is_archived: bool) -> Map<String, Value> {
     let mut input_map = serde_json::Map::new();
-    
+
     input_map.insert("clientRequestId".to_string(), Value::String(format!("{}", Uuid::new_v4())));
     input_map.insert("source".to_string(), Value::String("api".to_string()));
     input_map.insert("url".to_string(), Value::String(format!("{}", article_url)));

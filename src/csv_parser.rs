@@ -17,6 +17,7 @@ pub fn get_imported_articles(file_path: String) -> Result<Vec<Article>, Box<dyn 
     if errors.is_empty() {
         Ok(articles)
     } else {
+        // TODO some error handling in here
         Err("Errors occurred while reading the CSV".into())
     }
 }
