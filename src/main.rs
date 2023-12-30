@@ -1,3 +1,5 @@
+mod structs;
+
 use std::{error::Error};
 use std::process::exit;
 use std::sync::Arc;
@@ -10,37 +12,8 @@ use uuid::Uuid;
 use clap::Parser;
 use futures::{stream, StreamExt};
 use reqwest::Client;
+use crate::structs::{Arguments, Article};
 
-#[derive(Parser, Default, Debug)]
-#[clap(author = "Duncan Lew", version, about)]
-/// A Readwise to Omnivore importer
-struct Arguments {
-    #[clap(short, long)]
-    /// API key for Omnivore
-    key: String,
-
-    #[clap(short, long)]
-    /// File path for the CSV file
-    file_path: String,
-}
-
-#[derive(Debug, serde::Deserialize)]
-struct Article {
-    #[serde(rename(deserialize = "Title"))]
-    title: String,
-    #[serde(rename(deserialize = "URL"))]
-    url: String,
-    #[serde(rename(deserialize = "Document tags"))]
-    document_tags: String,
-    #[serde(rename(deserialize = "Saved date"))]
-    saved_date: String,
-    #[serde(rename(deserialize = "Reading progress"))]
-    reading_progress: String,
-    #[serde(rename(deserialize = "Location"))]
-    location: String,
-    #[serde(rename(deserialize = "Seen"))]
-    seen: String,
-}
 
 fn get_imported_articles(file_path: String) -> Result<Vec<Article>, Box<dyn Error>> {
     let mut csv_reader = csv::Reader::from_path(file_path)?;
