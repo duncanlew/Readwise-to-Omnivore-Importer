@@ -35,5 +35,6 @@ pub struct Article {
 pub struct ImportedArticle {
     pub(crate) url: String,
     pub(crate) successful: bool,
+    pub(crate) is_invalid_url: bool,
     pub(crate) error: Option<String>,
 }

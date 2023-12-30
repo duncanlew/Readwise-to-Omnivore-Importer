@@ -22,7 +22,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
             exit(1);
         });
 
-    omnivore_lib::save_urls(arguments.key, imported_articles).await;
+    let results = omnivore_lib::save_urls(arguments.key, imported_articles).await;
+    println!("\n*************************\nDone with async requests in the main function");
+    println!("{:#?}", results);
 
     println!("Successfully imported csv into Omnivore");
     Ok(())

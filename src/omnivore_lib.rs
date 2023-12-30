@@ -8,11 +8,11 @@ use uuid::Uuid;
 
 use crate::structs::{Article, ImportedArticle};
 
-pub async fn save_urls(key: String, imported_articles: Vec<Article>) {
+pub async fn save_urls(key: String, imported_articles: Vec<Article>) -> Vec<ImportedArticle> {
     let atomic_key = Arc::new(key);
     let client = Client::new();
 
-    let reults: Vec<ImportedArticle> = stream::iter(imported_articles)
+    stream::iter(imported_articles)
         .then(|article| {
             let key = Arc::clone(&atomic_key).to_string();
             let client = client.clone();
@@ -23,64 +23,29 @@ pub async fn save_urls(key: String, imported_articles: Vec<Article>) {
                 let is_archived = location == "archive";
                 let input = create_input(&article_url, &saved_date, is_archived);
 
-                let result = check_valid_url(&client, &article_url).await;
-
-                match result {
+                match check_valid_url(&client, &article_url).await {
                     Ok(is_valid_url) => {
-                        if (is_valid_url) {
+                        if is_valid_url {
                             match save_url(input, key, &client).await {
-                                Ok(_) => ImportedArticle { url: article_url, successful: true, error: None },
+                                Ok(_) => ImportedArticle { url: article_url, successful: true, is_invalid_url: false, error: None },
                                 Err(error) => {
                                     let error_message = format!("Error has occurred during the saving of URLs into Omnivore:{}", error);
-                                    ImportedArticle { url: article_url, successful: false, error: Some(error_message.to_string()) }
+                                    ImportedArticle { url: article_url, successful: false, is_invalid_url: false, error: Some(error_message.to_string()) }
                                 }
                             }
                         } else {
-                            let error_message = "URL is not valid";
-                            ImportedArticle { url: article_url, successful: false, error: Some(error_message.to_string()) }
+                            ImportedArticle { url: article_url, successful: false, is_invalid_url: true, error: None }
                         }
                     }
                     Err(error) => {
                         let error_message = format!("URL could not be validated: {}", error);
                         eprintln!("{}", error_message);
-                        ImportedArticle { url: article_url, successful: false, error: Some(error_message.to_string()) }
+                        ImportedArticle { url: article_url, successful: false, is_invalid_url: false, error: Some(error_message.to_string()) }
                     }
                 }
             }
         }).collect()
-        .await;
-    println!("\n*************************\nDone with async requests");
-    println!("{:#?}", reults)
-
-    // stream::iter(imported_articles)
-    //     .for_each_concurrent(None, |article| {
-    //         let key = Arc::clone(&atomic_key).to_string();
-    //         let client = client.clone();
-    //         async move {
-    //             let article_url = article.url.to_string();
-    //             let saved_date = article.saved_date.to_string();
-    //             let location = article.location.to_string();
-    //             let is_archived = location == "archive";
-    //             let input = create_input(&article_url, &saved_date, is_archived);
-    //
-    //             let is_valid_url = check_valid_url(&client, &article_url)
-    //                 .await
-    //                 .unwrap_or_else(|error| {
-    //                     eprintln!("Error occurred for checking url: {}", error);
-    //                     false
-    //                 });
-    //
-    //             println!("The url for {} was valid: {}", article.title, is_valid_url);
-    //             if is_valid_url {
-    //                 save_url(input, key, &client)
-    //                     .await
-    //                     .unwrap_or_else(|error| {
-    //                         eprintln!("Error has occurred during the saving of URLs into Omnivore:\n{}", error);
-    //                     });
-    //             }
-    //         }
-    //     })
-    //     .await;
+        .await
 }
 
 fn create_input(article_url: &str, saved_date: &str, is_archived: bool) -> Map<String, Value> {
