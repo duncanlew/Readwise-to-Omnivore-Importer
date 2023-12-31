@@ -1,4 +1,5 @@
 use clap::Parser;
+use serde::Deserialize;
 
 #[derive(Parser, Default, Debug)]
 #[clap(author = "Duncan Lew", version, about)]
@@ -37,4 +38,22 @@ pub struct ImportedArticle {
     pub(crate) successful: bool,
     pub(crate) is_invalid_url: bool,
     pub(crate) error: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SaveUrlResponse {
+    pub(crate) data: Data,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Data {
+    #[serde(rename(deserialize = "saveUrl"))]
+    pub(crate) save_url: SaveUrl,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SaveUrl {
+    url: String,
+    #[serde(rename(deserialize = "clientRequestId"))]
+    pub(crate) client_request_id: String,
 }
