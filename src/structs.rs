@@ -13,7 +13,7 @@ pub struct Arguments {
     pub(crate) file_path: String,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct Article {
     #[serde(rename(deserialize = "Title"))]
     pub(crate) title: String,
@@ -31,7 +31,7 @@ pub struct Article {
     pub(crate) seen: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct ImportedArticle {
     pub(crate) url: String,
     pub(crate) successful: bool,

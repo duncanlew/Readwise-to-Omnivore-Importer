@@ -2,6 +2,7 @@ use std::error::Error;
 use std::process::exit;
 
 use clap::Parser;
+use crate::csv_parser::write_logs;
 
 use crate::structs::{Arguments, ImportedArticle};
 
@@ -19,7 +20,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             exit(1);
         });
 
-    let results: Vec<ImportedArticle> = omnivore_lib::save_urls(arguments.key, imported_articles).await;
+    let results = omnivore_lib::save_urls(arguments.key, imported_articles).await;
     let (success_results, rest_results): (Vec<ImportedArticle>, Vec<ImportedArticle>) =  results.into_iter().partition(|result| result.successful);
     let (invalid_results, error_results): (Vec<ImportedArticle>, Vec<ImportedArticle>) = rest_results.into_iter().partition(|result| result.is_invalid_url);
 
@@ -32,7 +33,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("*************************\nSuccess results");
     println!("{:#?}", success_results);
     // End of TODO
-    
+
     let invalid_count = invalid_results.len();
     let error_count = error_results.len();
     let success_count = success_results.len();
@@ -43,5 +44,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("\tError count: {}", error_count);
     println!("\tSuccess count: {}", success_count);
 
+    write_logs(success_results)
+        .unwrap_or_else(|err| {
+            eprintln!("Error occurred during the saving of the logs: {}\nExiting application", err);
+            exit(1);
+        });;
     Ok(())
 }
