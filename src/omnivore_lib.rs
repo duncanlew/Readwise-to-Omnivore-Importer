@@ -8,11 +8,11 @@ use uuid::Uuid;
 
 use crate::structs::{Article, ImportedArticle};
 
-pub async fn save_urls(key: String, imported_articles: &Vec<Article>) -> Vec<ImportedArticle> {
+pub async fn save_urls(key: String, articles: &Vec<Article>) -> Vec<ImportedArticle> {
     let atomic_key = Arc::new(key);
     let client = Client::new();
 
-    stream::iter(imported_articles)
+    stream::iter(articles)
         .then(|article| {
             let key = Arc::clone(&atomic_key).to_string();
             let client = client.clone();
