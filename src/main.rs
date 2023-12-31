@@ -24,6 +24,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let (invalid_results, error_results): (Vec<ImportedArticle>, Vec<ImportedArticle>) = rest_results.into_iter().partition(|result| result.is_invalid_url);
 
     // TODO remove these lines
+    let invalid_count = invalid_results.len();
+    let error_count = error_results.len();
+    let success_count = success_results.len();
+    let total_count = invalid_count + error_count + success_count;
     println!("\n*************************\nInvalid results");
     println!("{:#?}", invalid_results);
     println!("*************************\nError results");
@@ -31,9 +35,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("*************************\nSuccess results");
     println!("{:#?}", success_results);
     println!("\n########################################");
-    println!("Invalid count: {}", invalid_results.len());
-    println!("Error count: {}", error_results.len());
-    println!("Success count: {}", success_results.len());
+    println!("Total processed: {}", total_count);
+    println!("\tInvalid count: {}", invalid_count);
+    println!("\tError count: {}", error_count);
+    println!("\tSuccess count: {}", success_count);
 
     Ok(())
 }
