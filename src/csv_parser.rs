@@ -22,11 +22,18 @@ pub fn get_imported_articles(file_path: &str) -> Result<Vec<Article>, Box<dyn Er
     }
 }
 
-pub fn write_logs(success_results: Vec<ImportedArticle>) -> Result<(), Box<dyn Error>> {
+pub fn write_logs(articles: Vec<Article>, invalid_results: Vec<ImportedArticle>, error_results: Vec<ImportedArticle>) -> Result<(), Box<dyn Error>> {
     let mut wtr = csv::Writer::from_path("foo.csv")?;
-    success_results
+
+    let invalid_urls: std::collections::HashSet<&str> = invalid_results
         .iter()
-        .try_for_each(|result| wtr.serialize(result))?;
+        .map(|imported_article| imported_article.url.as_str())
+        .collect();
+
+     articles
+        .iter()
+        .filter(|article| invalid_urls.contains(article.url.as_str()))
+        .try_for_each(|article| wtr.serialize(article))?;
 
     wtr.flush()?;
     Ok(())

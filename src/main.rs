@@ -14,13 +14,13 @@ mod omnivore_lib;
 async fn main() -> Result<(), Box<dyn Error>> {
     let arguments = Arguments::parse();
 
-    let imported_articles = csv_parser::get_imported_articles(&arguments.file_path)
+    let articles = csv_parser::get_imported_articles(&arguments.file_path)
         .unwrap_or_else(|err| {
             eprintln!("Error occurred: {}\nExiting application", err);
             exit(1);
         });
 
-    let results = omnivore_lib::save_urls(arguments.key, imported_articles).await;
+    let results = omnivore_lib::save_urls(arguments.key, &articles).await;
     let (success_results, rest_results): (Vec<ImportedArticle>, Vec<ImportedArticle>) =  results.into_iter().partition(|result| result.successful);
     let (invalid_results, error_results): (Vec<ImportedArticle>, Vec<ImportedArticle>) = rest_results.into_iter().partition(|result| result.is_invalid_url);
 
@@ -44,10 +44,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("\tError count: {}", error_count);
     println!("\tSuccess count: {}", success_count);
 
-    write_logs(success_results)
+    write_logs(articles, invalid_results, error_results)
         .unwrap_or_else(|err| {
             eprintln!("Error occurred during the saving of the logs: {}\nExiting application", err);
             exit(1);
-        });;
+        });
     Ok(())
 }
