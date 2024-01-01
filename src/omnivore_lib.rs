@@ -26,7 +26,7 @@ pub async fn save_urls(key: String, articles: &Vec<Article>) -> Vec<ImportedArti
                 match check_valid_url(&client, &article_url).await {
                     Ok(is_valid_url) => {
                         if is_valid_url {
-                            match save_url(input, key, &client).await {
+                            match save_url(&client, &key, input).await {
                                 Ok(_) => ImportedArticle { url: article_url, successful: true, is_invalid_url: false, error: None },
                                 Err(error) => {
                                     let error_message = format!("Error has occurred during the saving of URLs into Omnivore:{}", error);
@@ -71,7 +71,7 @@ fn create_input(article_url: &str, saved_date: &str, is_archived: bool) -> Map<S
     input_map
 }
 
-async fn save_url(input: Map<String, Value>, key: String, client: &Client) -> Result<(), Box<dyn Error>> {
+async fn save_url(client: &Client, key: &str, input: Map<String, Value>) -> Result<(), Box<dyn Error>> {
     let payload = json!({
         "query": "mutation SaveUrl($input: SaveUrlInput!) { \
             saveUrl(input: $input) { \
