@@ -25,22 +25,15 @@ async fn process_article(client: Client, key: String, article: &Article) -> Impo
     match check_valid_url(&client, &article_url).await {
         Ok(is_valid_url) => {
             if is_valid_url {
-                match save_url(&client, &key, article).await {
-                    Ok(_) => ImportResult { url: article_url, successful: true, is_invalid_url: false, error: None },
-                    Err(error) => {
-                        let error_message = format!("Error has occurred during the saving of URLs into Omnivore:{}", error);
-                        eprintln!("{}", error_message);
-                        ImportResult { url: article_url, successful: false, is_invalid_url: false, error: Some(error_message.to_string()) }
-                    }
-                }
+                save_url(&client, &key, article).await
             } else {
-                ImportResult { url: article_url, successful: false, is_invalid_url: true, error: None }
+                create_import_result(article_url, false, true, None)
             }
         }
         Err(error) => {
             let error_message = format!("URL could not be validated: {}", error);
             eprintln!("{}", error_message);
-            ImportResult { url: article_url, successful: false, is_invalid_url: false, error: Some(error_message.to_string()) }
+            create_import_result(article_url, false, false, Some(error_message.to_string()))
         }
     }
 }
@@ -50,7 +43,7 @@ async fn check_valid_url(client: &Client, article_url: &str) -> Result<bool, Box
     Ok(response.status().is_success())
 }
 
-async fn save_url(client: &Client, key: &str, article: &Article) -> Result<(), Box<dyn Error>> {
+async fn save_url(client: &Client, key: &str, article: &Article) -> ImportResult {
     let payload = json!({
         "query": "mutation SaveUrl($input: SaveUrlInput!) { \
             saveUrl(input: $input) { \
@@ -74,19 +67,19 @@ async fn save_url(client: &Client, key: &str, article: &Article) -> Result<(), B
         Ok(response) => {
             if response.status().is_success() {
                 // TODO remove these two lines at the end
-                let result_body = response.text().await?;
+                let result_body = response.text().await;
                 println!("Resulting body {:#?}", result_body);
-                Ok(())
+                create_import_result(article.url.to_string(), true, false, None)
             } else {
                 let status = response.status();
-                let text = response.text().await?;
-                let error_message = format!("Server returned the code \"{}\" and the message {}", status, text);
-                Err(error_message.into())
+                let text = response.text().await;
+                let error_message = format!("Error occurred during the saving of the URL. Server returned \"{}\" and the message {}", status, text.unwrap());
+                create_import_result(article.url.to_string(), false, false, Some(error_message))
             }
         }
         Err(error) => {
-            let error_message = format!("Error while processing request: {}", error);
-            Err(error_message.into())
+            let error_message = format!("Error occurred during the saving of the URL: {}", error);
+            create_import_result(article.url.to_string(), false, false, Some(error_message))
         }
     }
 }
