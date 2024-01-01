@@ -18,15 +18,15 @@ pub async fn save_urls(key: String, articles: &Vec<Article>) -> Vec<ImportedArti
             let client = client.clone();
             async move {
                 let article_url = article.url.to_string();
-                let saved_date = article.saved_date.to_string();
-                let location = article.location.to_string();
-                let is_archived = location == "archive";
-                let input = create_input(&article_url, &saved_date, is_archived);
+                // let saved_date = article.saved_date.to_string();
+                // let location = article.location.to_string();
+                // let is_archived = location == "archive";
+                // let input = create_input(&article_url, &saved_date, is_archived);
 
                 match check_valid_url(&client, &article_url).await {
                     Ok(is_valid_url) => {
                         if is_valid_url {
-                            match save_url(&client, &key, input).await {
+                            match save_url(&client, &key, article).await {
                                 Ok(_) => ImportedArticle { url: article_url, successful: true, is_invalid_url: false, error: None },
                                 Err(error) => {
                                     let error_message = format!("Error has occurred during the saving of URLs into Omnivore:{}", error);
@@ -55,23 +55,7 @@ async fn check_valid_url(client: &Client, article_url: &str) -> Result<bool, Box
     Ok(response.status().is_success())
 }
 
-fn create_input(article_url: &str, saved_date: &str, is_archived: bool) -> Map<String, Value> {
-    let mut input_map = serde_json::Map::new();
-
-    input_map.insert("clientRequestId".to_string(), Value::String(format!("{}", Uuid::new_v4())));
-    input_map.insert("source".to_string(), Value::String("api".to_string()));
-    input_map.insert("url".to_string(), Value::String(format!("{}", article_url)));
-    // TODO place this back
-    // input_map.insert("savedAt".to_string(), Value::String(format!("{}", saved_date)));
-    input_map.insert("labels".to_string(), json!([{"name": "imported"}]));
-    if is_archived {
-        input_map.insert("state".to_string(), Value::String("ARCHIVED".to_string()));
-    }
-
-    input_map
-}
-
-async fn save_url(client: &Client, key: &str, input: Map<String, Value>) -> Result<(), Box<dyn Error>> {
+async fn save_url(client: &Client, key: &str, article: &Article) -> Result<(), Box<dyn Error>> {
     let payload = json!({
         "query": "mutation SaveUrl($input: SaveUrlInput!) { \
             saveUrl(input: $input) { \
@@ -80,7 +64,7 @@ async fn save_url(client: &Client, key: &str, input: Map<String, Value>) -> Resu
                 } \
             }",
         "variables": {
-            "input": input
+            "input": create_input(article)
         }
     });
 
@@ -112,4 +96,23 @@ async fn save_url(client: &Client, key: &str, input: Map<String, Value>) -> Resu
     }
 }
 
+// fn create_input(article_url: &str, saved_date: &str, is_archived: bool) -> Map<String, Value> {
+fn create_input(article: &Article) -> Map<String, Value> {
+    let article_url = article.url.to_string();
+    let saved_date = article.saved_date.to_string();
+    let location = article.location.to_string();
+    let is_archived = location == "archive";
 
+    let mut input_map = serde_json::Map::new();
+    input_map.insert("clientRequestId".to_string(), Value::String(format!("{}", Uuid::new_v4())));
+    input_map.insert("source".to_string(), Value::String("api".to_string()));
+    input_map.insert("url".to_string(), Value::String(format!("{}", article_url)));
+    // TODO place this back
+    // input_map.insert("savedAt".to_string(), Value::String(format!("{}", saved_date)));
+    input_map.insert("labels".to_string(), json!([{"name": "imported"}]));
+    if is_archived {
+        input_map.insert("state".to_string(), Value::String("ARCHIVED".to_string()));
+    }
+
+    input_map
+}
