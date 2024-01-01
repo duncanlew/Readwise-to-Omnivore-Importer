@@ -2,19 +2,19 @@ use std::error::Error;
 use std::process::exit;
 
 use clap::Parser;
-use crate::csv_parser::write_logs;
+use crate::csv_utils::write_logs;
 
 use crate::structs::{Arguments, ImportedArticle};
 
 mod structs;
-mod csv_parser;
+mod csv_utils;
 mod omnivore_lib;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let arguments = Arguments::parse();
 
-    let articles = csv_parser::get_imported_articles(&arguments.file_path)
+    let articles = csv_utils::get_imported_articles(&arguments.file_path)
         .unwrap_or_else(|err| {
             eprintln!("Error occurred: {}\nExiting application", err);
             exit(1);
