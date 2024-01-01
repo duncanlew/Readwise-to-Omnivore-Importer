@@ -18,11 +18,6 @@ pub async fn save_urls(key: String, articles: &Vec<Article>) -> Vec<ImportedArti
             let client = client.clone();
             async move {
                 let article_url = article.url.to_string();
-                // let saved_date = article.saved_date.to_string();
-                // let location = article.location.to_string();
-                // let is_archived = location == "archive";
-                // let input = create_input(&article_url, &saved_date, is_archived);
-
                 match check_valid_url(&client, &article_url).await {
                     Ok(is_valid_url) => {
                         if is_valid_url {
@@ -96,7 +91,6 @@ async fn save_url(client: &Client, key: &str, article: &Article) -> Result<(), B
     }
 }
 
-// fn create_input(article_url: &str, saved_date: &str, is_archived: bool) -> Map<String, Value> {
 fn create_input(article: &Article) -> Map<String, Value> {
     let article_url = article.url.to_string();
     let saved_date = article.saved_date.to_string();
