@@ -39,10 +39,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let success_count = success_results.len();
     let total_count = invalid_count + error_count + success_count;
     println!("\n=============================================");
-    println!("Total processed: {}", total_count);
-    println!("\tInvalid count: {}", invalid_count);
-    println!("\tError count: {}", error_count);
-    println!("\tSuccess count: {}", success_count);
+    println!("Total processed articles: {}", total_count);
+    println!("\tAmount of success articles: {}", success_count);
+    println!("\tAmount of invalid articles: {}", invalid_count);
+    println!("\tAmount of error articles: {}", error_count);
 
     write_logs(articles, invalid_results, error_results);
     Ok(())
