@@ -44,10 +44,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("\tError count: {}", error_count);
     println!("\tSuccess count: {}", success_count);
 
-    write_logs(articles, invalid_results, error_results)
-        .unwrap_or_else(|err| {
-            eprintln!("Error occurred during the saving of the logs: {}\nExiting application", err);
-            exit(1);
-        });
+    write_logs(articles, invalid_results, error_results);
     Ok(())
 }
