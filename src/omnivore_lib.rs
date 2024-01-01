@@ -1,4 +1,5 @@
 use std::error::Error;
+use tokio::time::{timeout, Duration};
 
 use futures::{stream, StreamExt};
 use reqwest::Client;
@@ -31,7 +32,7 @@ async fn process_article(client: Client, key: String, article: &Article) -> Impo
             }
         }
         Err(error) => {
-            let error_message = format!("URL could not be validated: {}", error);
+            let error_message = format!("URL could not be validated {}: {}", article_url, error);
             eprintln!("{}", error_message);
             create_import_result(article_url, false, false, Some(error_message.to_string()))
         }
@@ -56,29 +57,37 @@ async fn save_url(client: &Client, key: &str, article: &Article) -> ImportResult
         }
     });
 
-    let result = client.post("https://api-prod.omnivore.app/api/graphql")
-        .json(&payload)
-        .header("content-type", "application/json")
-        .header("authorization", key)
-        .send()
-        .await;
+    let timeout_duration = Duration::from_secs(30);
+    let result = timeout(
+        timeout_duration,
+        client.post("https://api-prod.omnivore.app/api/graphql")
+            .json(&payload)
+            .header("content-type", "application/json")
+            .header("authorization", key)
+            .send(),
+    ).await;
 
+    let article_url = article.url.to_string();
     match result {
-        Ok(response) => {
+        Ok(Ok(response)) => {
             if response.status().is_success() {
                 // TODO remove these two lines at the end
                 let result_body = response.text().await;
                 println!("Resulting body {:#?}", result_body);
-                create_import_result(article.url.to_string(), true, false, None)
+                create_import_result(article_url, true, false, None)
             } else {
                 let status = response.status();
                 let text = response.text().await;
-                let error_message = format!("Error occurred during the saving of the URL. Server returned \"{}\" and the message {}", status, text.unwrap());
-                create_import_result(article.url.to_string(), false, false, Some(error_message))
+                let error_message = format!("Error occurred during the saving of the URL {}. Server returned \"{}\" and the message {}", article_url, status, text.unwrap());
+                create_import_result(article_url, false, false, Some(error_message))
             }
         }
+        Ok(Err(error)) => {
+            let error_message = format!("Error occurred during the saving of the URL {}: {}", article_url, error);
+            create_import_result(article.url.to_string(), false, false, Some(error_message))
+        }
         Err(error) => {
-            let error_message = format!("Error occurred during the saving of the URL: {}", error);
+            let error_message = format!("Timeout occurred for the saving of the URL {}: {}", article_url, error);
             create_import_result(article.url.to_string(), false, false, Some(error_message))
         }
     }
