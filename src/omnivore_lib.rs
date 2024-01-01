@@ -1,9 +1,9 @@
 use std::error::Error;
-use tokio::time::{timeout, Duration};
 
 use futures::{stream, StreamExt};
 use reqwest::Client;
 use serde_json::{json, Map, Value};
+use tokio::time::{Duration, timeout};
 use uuid::Uuid;
 
 use crate::structs::{Article, ImportResult};
