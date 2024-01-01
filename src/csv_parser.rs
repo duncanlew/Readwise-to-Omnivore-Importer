@@ -40,10 +40,10 @@ pub fn write_logs(articles: Vec<Article>, invalid_results: Vec<ImportedArticle>,
         .unwrap_or_else(|err| {
             eprintln!("Error occurred during the saving of the logs for invalid articles {}", err);
         });
-    // write_logs_for_error_articles(&timestamp, error_urls, &articles)
-    //     .unwrap_or_else(|err| {
-    //         eprintln!("Error occurred during the saving of the logs for error articles {}", err);
-    //     });
+    write_logs_for_error_articles(&timestamp, error_urls, &articles)
+        .unwrap_or_else(|err| {
+            eprintln!("Error occurred during the saving of the logs for error articles {}", err);
+        });
 }
 
 fn write_logs_for_invalid_articles(timestamp: &str, invalid_urls: std::collections::HashSet<&str>, articles: &Vec<Article>) -> Result<(), Box<dyn Error>> {
@@ -59,7 +59,7 @@ fn write_logs_for_invalid_articles(timestamp: &str, invalid_urls: std::collectio
 }
 
 fn write_logs_for_error_articles(timestamp: &str, error_urls: std::collections::HashSet<&str>, articles: &Vec<Article>) -> Result<(), Box<dyn Error>> {
-    let mut wtr = csv::Writer::from_path(format!("invalid-articles-{}.csv", timestamp))?;
+    let mut wtr = csv::Writer::from_path(format!("error-articles-{}.csv", timestamp))?;
 
     articles
         .iter()
