@@ -27,26 +27,28 @@ pub fn get_imported_articles(file_path: &str) -> Result<Vec<Article>, Box<dyn Er
 pub fn write_logs(articles: Vec<Article>, invalid_results: Vec<ImportedArticle>, error_results: Vec<ImportedArticle>) {
     let timestamp = Local::now().format("%Y-%m-%d--%H-%M-%S").to_string();
 
-    write_logs_for_articles(&timestamp, &articles, invalid_results, "invalid")
+    write_logs_for_articles("invalid", &timestamp, &articles, invalid_results)
         .unwrap_or_else(|err| {
             eprintln!("Error occurred during the saving of the logs for invalid articles: {}", err);
         });
-    write_logs_for_articles(&timestamp,&articles, error_results, "error")
+    write_logs_for_articles("error", &timestamp, &articles, error_results)
         .unwrap_or_else(|err| {
             eprintln!("Error occurred during the saving of the logs for error articles: {}", err);
         });
 }
 
-fn write_logs_for_articles(timestamp: &str, articles: &Vec<Article>, results: Vec<ImportedArticle>, log_type: &str) -> Result<(), Box<dyn Error>> {
-    // TODO move log_type to the front
-    // TODO if urls is empyt don't output anything.
-    let file_name = format!("{}-articles-{}.csv", log_type, timestamp);
-    let mut wtr = csv::Writer::from_path(file_name)?;
-
+fn write_logs_for_articles(log_type: &str, timestamp: &str, articles: &Vec<Article>, results: Vec<ImportedArticle>) -> Result<(), Box<dyn Error>> {
     let urls: HashSet<&str> = results
         .iter()
         .map(|imported_article| imported_article.url.as_str())
         .collect();
+
+    if urls.is_empty() {
+        return Ok(());
+    }
+
+    let file_name = format!("{}-articles-{}.csv", log_type, timestamp);
+    let mut wtr = csv::Writer::from_path(file_name)?;
 
     articles
         .iter()
