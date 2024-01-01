@@ -1,5 +1,5 @@
 use std::error::Error;
-use std::process::exit;
+use std::collections::HashSet;
 use chrono::Local;
 
 use itertools::Either::{Left, Right};
@@ -27,43 +27,29 @@ pub fn get_imported_articles(file_path: &str) -> Result<Vec<Article>, Box<dyn Er
 pub fn write_logs(articles: Vec<Article>, invalid_results: Vec<ImportedArticle>, error_results: Vec<ImportedArticle>) {
     let timestamp = Local::now().format("%Y-%m-%d--%H-%M-%S").to_string();
 
-    let invalid_urls: std::collections::HashSet<&str> = invalid_results
-        .iter()
-        .map(|imported_article| imported_article.url.as_str())
-        .collect();
-    let error_urls: std::collections::HashSet<&str> = error_results
-        .iter()
-        .map(|imported_article| imported_article.url.as_str())
-        .collect();
-
-    write_logs_for_invalid_articles(&timestamp, invalid_urls, &articles)
+    write_logs_for_articles(&timestamp, &articles, invalid_results, "invalid")
         .unwrap_or_else(|err| {
-            eprintln!("Error occurred during the saving of the logs for invalid articles {}", err);
+            eprintln!("Error occurred during the saving of the logs for invalid articles: {}", err);
         });
-    write_logs_for_error_articles(&timestamp, error_urls, &articles)
+    write_logs_for_articles(&timestamp,&articles, error_results, "error")
         .unwrap_or_else(|err| {
-            eprintln!("Error occurred during the saving of the logs for error articles {}", err);
+            eprintln!("Error occurred during the saving of the logs for error articles: {}", err);
         });
 }
 
-fn write_logs_for_invalid_articles(timestamp: &str, invalid_urls: std::collections::HashSet<&str>, articles: &Vec<Article>) -> Result<(), Box<dyn Error>> {
-    let mut wtr = csv::Writer::from_path(format!("invalid-articles-{}.csv", timestamp))?;
+fn write_logs_for_articles(timestamp: &str, articles: &Vec<Article>, results: Vec<ImportedArticle>, log_type: &str) -> Result<(), Box<dyn Error>> {
+    // TODO if urls is empyt don't output anything.
+    let file_name = format!("{}-articles-{}.csv", log_type, timestamp);
+    let mut wtr = csv::Writer::from_path(file_name)?;
+
+    let urls: HashSet<&str> = results
+        .iter()
+        .map(|imported_article| imported_article.url.as_str())
+        .collect();
 
     articles
         .iter()
-        .filter(|article| invalid_urls.contains(article.url.as_str()))
-        .try_for_each(|article| wtr.serialize(article))?;
-
-    wtr.flush()?;
-    Ok(())
-}
-
-fn write_logs_for_error_articles(timestamp: &str, error_urls: std::collections::HashSet<&str>, articles: &Vec<Article>) -> Result<(), Box<dyn Error>> {
-    let mut wtr = csv::Writer::from_path(format!("error-articles-{}.csv", timestamp))?;
-
-    articles
-        .iter()
-        .filter(|article| error_urls.contains(article.url.as_str()))
+        .filter(|article| urls.contains(article.url.as_str()))
         .try_for_each(|article| wtr.serialize(article))?;
 
     wtr.flush()?;
