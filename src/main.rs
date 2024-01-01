@@ -2,8 +2,8 @@ use std::error::Error;
 use std::process::exit;
 
 use clap::Parser;
-use crate::csv_utils::write_logs;
 
+use crate::csv_utils::write_logs;
 use crate::structs::{Arguments, ImportedArticle};
 
 mod structs;
@@ -16,7 +16,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let articles = csv_utils::get_imported_articles(&arguments.file_path)
         .unwrap_or_else(|err| {
-            eprintln!("Error occurred: {}\nExiting application", err);
+            eprintln!("Errors occurred while parsing the CSV: {}\nExiting application", err);
             exit(1);
         });
 
