@@ -36,7 +36,7 @@ pub fn write_logs(articles: Vec<Article>, invalid_results: Vec<ImportedArticle>,
         .map(|imported_article| imported_article.url.as_str())
         .collect();
 
-    write_logs_for_invalid_articles(&timestamp, invalid_urls, articles)
+    write_logs_for_invalid_articles(&timestamp, invalid_urls, &articles)
         .unwrap_or_else(|err| {
             eprintln!("Error occurred during the saving of the logs for invalid articles {}", err);
         });
@@ -46,7 +46,7 @@ pub fn write_logs(articles: Vec<Article>, invalid_results: Vec<ImportedArticle>,
     //     });
 }
 
-fn write_logs_for_invalid_articles(timestamp: &str, invalid_urls: std::collections::HashSet<&str>, articles: Vec<Article>) -> Result<(), Box<dyn Error>> {
+fn write_logs_for_invalid_articles(timestamp: &str, invalid_urls: std::collections::HashSet<&str>, articles: &Vec<Article>) -> Result<(), Box<dyn Error>> {
     let mut wtr = csv::Writer::from_path(format!("invalid-articles-{}.csv", timestamp))?;
 
     articles
