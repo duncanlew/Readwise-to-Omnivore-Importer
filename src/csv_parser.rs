@@ -38,6 +38,7 @@ pub fn write_logs(articles: Vec<Article>, invalid_results: Vec<ImportedArticle>,
 }
 
 fn write_logs_for_articles(timestamp: &str, articles: &Vec<Article>, results: Vec<ImportedArticle>, log_type: &str) -> Result<(), Box<dyn Error>> {
+    // TODO move log_type to the front
     // TODO if urls is empyt don't output anything.
     let file_name = format!("{}-articles-{}.csv", log_type, timestamp);
     let mut wtr = csv::Writer::from_path(file_name)?;
