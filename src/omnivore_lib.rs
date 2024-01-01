@@ -1,14 +1,13 @@
 use std::error::Error;
-use std::sync::Arc;
 
 use futures::{stream, StreamExt};
 use reqwest::Client;
 use serde_json::{json, Map, Value};
 use uuid::Uuid;
 
-use crate::structs::{Article, ImportedArticle};
+use crate::structs::{Article, ImportResult};
 
-pub async fn save_urls(key: String, articles: &Vec<Article>) -> Vec<ImportedArticle> {
+pub async fn save_urls(key: String, articles: &Vec<Article>) -> Vec<ImportResult> {
     let client = Client::new();
 
     stream::iter(articles)
@@ -21,27 +20,27 @@ pub async fn save_urls(key: String, articles: &Vec<Article>) -> Vec<ImportedArti
         .await
 }
 
-async fn process_article(client: Client, key: String, article: &Article) -> ImportedArticle {
+async fn process_article(client: Client, key: String, article: &Article) -> ImportResult {
     let article_url = article.url.to_string();
     match check_valid_url(&client, &article_url).await {
         Ok(is_valid_url) => {
             if is_valid_url {
                 match save_url(&client, &key, article).await {
-                    Ok(_) => ImportedArticle { url: article_url, successful: true, is_invalid_url: false, error: None },
+                    Ok(_) => ImportResult { url: article_url, successful: true, is_invalid_url: false, error: None },
                     Err(error) => {
                         let error_message = format!("Error has occurred during the saving of URLs into Omnivore:{}", error);
                         eprintln!("{}", error_message);
-                        ImportedArticle { url: article_url, successful: false, is_invalid_url: false, error: Some(error_message.to_string()) }
+                        ImportResult { url: article_url, successful: false, is_invalid_url: false, error: Some(error_message.to_string()) }
                     }
                 }
             } else {
-                ImportedArticle { url: article_url, successful: false, is_invalid_url: true, error: None }
+                ImportResult { url: article_url, successful: false, is_invalid_url: true, error: None }
             }
         }
         Err(error) => {
             let error_message = format!("URL could not be validated: {}", error);
             eprintln!("{}", error_message);
-            ImportedArticle { url: article_url, successful: false, is_invalid_url: false, error: Some(error_message.to_string()) }
+            ImportResult { url: article_url, successful: false, is_invalid_url: false, error: Some(error_message.to_string()) }
         }
     }
 }
@@ -110,4 +109,13 @@ fn create_input(article: &Article) -> Map<String, Value> {
     }
 
     input_map
+}
+
+fn create_import_result(url: String, successful: bool, is_invalid_url: bool, error: Option<String>) -> ImportResult {
+    ImportResult {
+        url,
+        successful,
+        is_invalid_url,
+        error,
+    }
 }

@@ -5,7 +5,7 @@ use chrono::Local;
 use itertools::Either::{Left, Right};
 use itertools::Itertools;
 
-use crate::structs::{Article, ImportedArticle};
+use crate::structs::{Article, ImportResult};
 
 pub fn get_imported_articles(file_path: &str) -> Result<Vec<Article>, Box<dyn Error>> {
     let mut csv_reader = csv::Reader::from_path(file_path)?;
@@ -24,7 +24,7 @@ pub fn get_imported_articles(file_path: &str) -> Result<Vec<Article>, Box<dyn Er
     }
 }
 
-pub fn write_logs(articles: Vec<Article>, invalid_results: Vec<ImportedArticle>, error_results: Vec<ImportedArticle>) {
+pub fn write_logs(articles: Vec<Article>, invalid_results: Vec<ImportResult>, error_results: Vec<ImportResult>) {
     let timestamp = Local::now().format("%Y-%m-%d--%H-%M-%S").to_string();
 
     write_logs_for_articles("invalid", &timestamp, &articles, &invalid_results)
@@ -37,7 +37,7 @@ pub fn write_logs(articles: Vec<Article>, invalid_results: Vec<ImportedArticle>,
         });
 }
 
-fn write_logs_for_articles(log_type: &str, timestamp: &str, articles: &Vec<Article>, results: &Vec<ImportedArticle>) -> Result<(), Box<dyn Error>> {
+fn write_logs_for_articles(log_type: &str, timestamp: &str, articles: &Vec<Article>, results: &Vec<ImportResult>) -> Result<(), Box<dyn Error>> {
     let urls: HashSet<&str> = results
         .iter()
         .map(|imported_article| imported_article.url.as_str())
