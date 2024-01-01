@@ -1,4 +1,5 @@
 use std::error::Error;
+use chrono::Local;
 
 use itertools::Either::{Left, Right};
 use itertools::Itertools;
@@ -23,7 +24,9 @@ pub fn get_imported_articles(file_path: &str) -> Result<Vec<Article>, Box<dyn Er
 }
 
 pub fn write_logs(articles: Vec<Article>, invalid_results: Vec<ImportedArticle>, error_results: Vec<ImportedArticle>) -> Result<(), Box<dyn Error>> {
-    let mut wtr = csv::Writer::from_path("foo.csv")?;
+    let timestamp = Local::now().format("%Y-%m-%d--%H-%M-%S").to_string();
+
+    let mut wtr = csv::Writer::from_path(format!("invalid-articles-{}.csv", timestamp))?;
 
     let invalid_urls: std::collections::HashSet<&str> = invalid_results
         .iter()
