@@ -31,6 +31,7 @@ pub struct Article {
     pub(crate) seen: String,
 }
 
+// TODO rename to import result
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct ImportedArticle {
     pub(crate) url: String,

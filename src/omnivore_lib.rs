@@ -9,40 +9,41 @@ use uuid::Uuid;
 use crate::structs::{Article, ImportedArticle};
 
 pub async fn save_urls(key: String, articles: &Vec<Article>) -> Vec<ImportedArticle> {
-    let atomic_key = Arc::new(key);
     let client = Client::new();
 
     stream::iter(articles)
         .then(|article| {
-            let key = Arc::clone(&atomic_key).to_string();
+            let key = key.clone();
             let client = client.clone();
-            async move {
-                let article_url = article.url.to_string();
-                match check_valid_url(&client, &article_url).await {
-                    Ok(is_valid_url) => {
-                        if is_valid_url {
-                            match save_url(&client, &key, article).await {
-                                Ok(_) => ImportedArticle { url: article_url, successful: true, is_invalid_url: false, error: None },
-                                Err(error) => {
-                                    let error_message = format!("Error has occurred during the saving of URLs into Omnivore:{}", error);
-                                    eprintln!("{}", error_message);
-                                    ImportedArticle { url: article_url, successful: false, is_invalid_url: false, error: Some(error_message.to_string()) }
-                                }
-                            }
-                        } else {
-                            ImportedArticle { url: article_url, successful: false, is_invalid_url: true, error: None }
-                        }
-                    }
+            process_article(client, key, article)
+        })
+        .collect()
+        .await
+}
+
+async fn process_article(client: Client, key: String, article: &Article) -> ImportedArticle {
+    let article_url = article.url.to_string();
+    match check_valid_url(&client, &article_url).await {
+        Ok(is_valid_url) => {
+            if is_valid_url {
+                match save_url(&client, &key, article).await {
+                    Ok(_) => ImportedArticle { url: article_url, successful: true, is_invalid_url: false, error: None },
                     Err(error) => {
-                        let error_message = format!("URL could not be validated: {}", error);
+                        let error_message = format!("Error has occurred during the saving of URLs into Omnivore:{}", error);
                         eprintln!("{}", error_message);
                         ImportedArticle { url: article_url, successful: false, is_invalid_url: false, error: Some(error_message.to_string()) }
                     }
                 }
+            } else {
+                ImportedArticle { url: article_url, successful: false, is_invalid_url: true, error: None }
             }
-        })
-        .collect()
-        .await
+        }
+        Err(error) => {
+            let error_message = format!("URL could not be validated: {}", error);
+            eprintln!("{}", error_message);
+            ImportedArticle { url: article_url, successful: false, is_invalid_url: false, error: Some(error_message.to_string()) }
+        }
+    }
 }
 
 async fn check_valid_url(client: &Client, article_url: &str) -> Result<bool, Box<dyn Error>> {
