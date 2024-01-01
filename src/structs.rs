@@ -32,7 +32,7 @@ pub struct Article {
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct ImportedArticle {
+pub struct ImportResult {
     pub(crate) url: String,
     pub(crate) successful: bool,
     pub(crate) is_invalid_url: bool,

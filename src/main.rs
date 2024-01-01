@@ -4,7 +4,7 @@ use std::process::exit;
 use clap::Parser;
 
 use crate::csv_utils::write_logs;
-use crate::structs::{Arguments, ImportedArticle};
+use crate::structs::{Arguments, ImportResult};
 
 mod structs;
 mod csv_utils;
@@ -21,8 +21,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         });
 
     let results = omnivore_lib::save_urls(arguments.key, &articles).await;
-    let (success_results, rest_results): (Vec<ImportedArticle>, Vec<ImportedArticle>) =  results.into_iter().partition(|result| result.successful);
-    let (invalid_results, error_results): (Vec<ImportedArticle>, Vec<ImportedArticle>) = rest_results.into_iter().partition(|result| result.is_invalid_url);
+    let (success_results, rest_results): (Vec<ImportResult>, Vec<ImportResult>) =  results.into_iter().partition(|result| result.successful);
+    let (invalid_results, error_results): (Vec<ImportResult>, Vec<ImportResult>) = rest_results.into_iter().partition(|result| result.is_invalid_url);
 
 
     // TODO remove these lines
