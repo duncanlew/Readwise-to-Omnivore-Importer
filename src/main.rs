@@ -14,6 +14,10 @@ mod omnivore_lib;
 async fn main() -> Result<(), Box<dyn Error>> {
     let arguments = Arguments::parse();
 
+    println!("\n=============================================");
+    println!("Readwise to Omnivore importer");
+    println!("Using API key: {}", arguments.key);
+    println!("Using file path: {}", arguments.file_path);
     let articles = csv_utils::get_imported_articles(&arguments.file_path)
         .unwrap_or_else(|error| {
             eprintln!("Errors occurred while parsing the CSV: {}\nExiting application", error);
@@ -23,16 +27,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let results = omnivore_lib::save_urls(arguments.key, &articles).await;
     let (success_results, rest_results): (Vec<ImportResult>, Vec<ImportResult>) =  results.into_iter().partition(|result| result.successful);
     let (invalid_results, error_results): (Vec<ImportResult>, Vec<ImportResult>) = rest_results.into_iter().partition(|result| result.is_invalid_url);
-
-
-    // TODO remove these lines
-    println!("\n*************************\nInvalid results");
-    println!("{:#?}", invalid_results);
-    println!("*************************\nError results");
-    println!("{:#?}", error_results);
-    println!("*************************\nSuccess results");
-    println!("{:#?}", success_results);
-    // End of TODO
 
     let invalid_count = invalid_results.len();
     let error_count = error_results.len();

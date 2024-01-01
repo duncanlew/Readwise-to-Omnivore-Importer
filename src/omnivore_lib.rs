@@ -71,9 +71,6 @@ async fn save_url(client: &Client, key: &str, article: &Article) -> ImportResult
     match result {
         Ok(Ok(response)) => {
             if response.status().is_success() {
-                // TODO remove these two lines at the end
-                let result_body = response.text().await;
-                println!("Resulting body {:#?}", result_body);
                 create_import_result(article_url, true, false, None)
             } else {
                 let status = response.status();
@@ -103,8 +100,7 @@ fn create_input(article: &Article) -> Map<String, Value> {
     input_map.insert("clientRequestId".to_string(), Value::String(format!("{}", Uuid::new_v4())));
     input_map.insert("source".to_string(), Value::String("api".to_string()));
     input_map.insert("url".to_string(), Value::String(format!("{}", article_url)));
-    // TODO place this back
-    // input_map.insert("savedAt".to_string(), Value::String(format!("{}", saved_date)));
+    input_map.insert("savedAt".to_string(), Value::String(format!("{}", saved_date)));
     input_map.insert("labels".to_string(), json!([{"name": "imported"}]));
     if is_archived {
         input_map.insert("state".to_string(), Value::String("ARCHIVED".to_string()));
