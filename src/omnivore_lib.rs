@@ -30,6 +30,7 @@ pub async fn save_urls(key: String, articles: &Vec<Article>) -> Vec<ImportedArti
                                 Ok(_) => ImportedArticle { url: article_url, successful: true, is_invalid_url: false, error: None },
                                 Err(error) => {
                                     let error_message = format!("Error has occurred during the saving of URLs into Omnivore:{}", error);
+                                    eprintln!("{}", error_message);
                                     ImportedArticle { url: article_url, successful: false, is_invalid_url: false, error: Some(error_message.to_string()) }
                                 }
                             }
@@ -49,6 +50,11 @@ pub async fn save_urls(key: String, articles: &Vec<Article>) -> Vec<ImportedArti
         .await
 }
 
+async fn check_valid_url(client: &Client, article_url: &str) -> Result<bool, Box<dyn Error>> {
+    let response = client.get(article_url).send().await?;
+    Ok(response.status().is_success())
+}
+
 fn create_input(article_url: &str, saved_date: &str, is_archived: bool) -> Map<String, Value> {
     let mut input_map = serde_json::Map::new();
 
@@ -63,11 +69,6 @@ fn create_input(article_url: &str, saved_date: &str, is_archived: bool) -> Map<S
     }
 
     input_map
-}
-
-async fn check_valid_url(client: &Client, article_url: &str) -> Result<bool, Box<dyn Error>> {
-    let response = client.get(article_url).send().await?;
-    Ok(response.status().is_success())
 }
 
 async fn save_url(input: Map<String, Value>, key: String, client: &Client) -> Result<(), Box<dyn Error>> {
