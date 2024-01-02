@@ -1,9 +1,10 @@
 name: Tests and release
-on:
+on: [push]
+#on:
 #  push:
 #    branches: [ main ]
-  pull_request:
-    branches: [ release-gh-action ]
+#  pull_request:
+#    branches: [ release-gh-action ]
 
 env:
   GITHUB_TOKEN: ${{ github.token }}
