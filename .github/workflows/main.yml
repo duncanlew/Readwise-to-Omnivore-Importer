@@ -45,12 +45,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: Cache cargo & target directories
         uses: Swatinem/rust-cache@v2
-#      - name: Configure Git
-#        run: |
-#          git config --global user.email "jdoe@example.com"
-#          git config --global user.name "J. Doe"
       - name: Install musl-tools on Linux
-        run: sudo apt-get update --yes && sudo apt-get install --yes musl-tools
+        run: sudo apt-get update --yes && sudo apt-get install --yes musl-tools && sudo apt install pkg-config
         if: contains(matrix.platform.name, 'musl')
       - name: Build binary
         uses: houseabsolute/actions-rust-cross@v0
@@ -78,16 +74,11 @@ jobs:
             tar czvf ../../../${{ matrix.platform.name }} ${{ matrix.platform.bin }}
           fi
           cd -
-#        if: |
-#          matrix.toolchain == 'stable' &&
-#          ( startsWith( github.ref, 'refs/tags/v' ) ||
-#            github.ref == 'refs/tags/test-release' )
       - name: Publish release artifacts
         uses: actions/upload-artifact@v3
         with:
           name: readwise-to-omnivore-importer-${{ matrix.platform.os_name }}
           path: "readwise-to-omnivore-importer-*"
-        if: matrix.toolchain == 'stable'
 #      - name: Generate SHA-256
 #        run: shasum -a 256 ${{ matrix.platform.name }}
 #        if: |
