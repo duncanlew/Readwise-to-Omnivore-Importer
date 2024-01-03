@@ -34,12 +34,12 @@ jobs:
             os: macOS-latest
             target: x86_64-apple-darwin
             bin: readwise-to-omnivore-importer
-            name: readwise-to-omnivore-importer-Darwin-x86_64.tar.gz
+            name: readwise-to-omnivore-importer-MacOS-x86_64.tar.gz
           - os_name: macOS-aarch64
             os: macOS-latest
             target: aarch64-apple-darwin
             bin: readwise-to-omnivore-importer
-            name: readwise-to-omnivore-importer-Darwin-aarch64.tar.gz
+            name: readwise-to-omnivore-importer-MacOS-aarch64.tar.gz
             skip_tests: true
         toolchain:
           - stable
