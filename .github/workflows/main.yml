@@ -8,7 +8,6 @@ on: [push]
 
 env:
   GITHUB_TOKEN: ${{ github.token }}
-#  RUST_BACKTRACE: 1
 
 jobs:
   release:
@@ -56,14 +55,6 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           args: "--release"
           strip: true
-#      - name: Run tests
-#        uses: houseabsolute/actions-rust-cross@v0
-#        with:
-#          command: "test"
-#          target: ${{ matrix.platform.target }}
-#          toolchain: ${{ matrix.toolchain }}
-#          args: "--locked --release"
-#        if: ${{ !matrix.platform.skip_tests }}
       - name: Package as archive
         shell: bash
         run: |
@@ -79,17 +70,8 @@ jobs:
         with:
           name: readwise-to-omnivore-importer-${{ matrix.platform.os_name }}
           path: "readwise-to-omnivore-importer-*"
-#      - name: Generate SHA-256
-#        run: shasum -a 256 ${{ matrix.platform.name }}
-#        if: |
-#          matrix.toolchain == 'stable' &&
-#          matrix.platform.os == 'macOS-latest' &&
-#          ( startsWith( github.ref, 'refs/tags/v' ) ||
-#            github.ref == 'refs/tags/test-release' )
-#      - name: Publish GitHub release
-#        uses: softprops/action-gh-release@v1
-#        with:
-#          draft: true
-#          files: "readwise-to-omnivore-importer-*"
-#          body_path: Changes.md
-#        if: matrix.toolchain == 'stable' && startsWith( github.ref, 'refs/tags/v' )
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: "readwise-to-omnivore-importer-*"
