@@ -1,4 +1,4 @@
-name: Tests and release
+name: Release
 on: [push]
 #on:
 #  push:
@@ -85,7 +85,7 @@ jobs:
       - name: Publish release artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: precious-${{ matrix.platform.os_name }}
+          name: readwise-to-omnivore-importer-${{ matrix.platform.os_name }}
           path: "readwise-to-omnivore-importer-*"
         if: matrix.toolchain == 'stable'
 #      - name: Generate SHA-256
@@ -99,6 +99,6 @@ jobs:
 #        uses: softprops/action-gh-release@v1
 #        with:
 #          draft: true
-#          files: "precious-*"
+#          files: "readwise-to-omnivore-importer-*"
 #          body_path: Changes.md
 #        if: matrix.toolchain == 'stable' && startsWith( github.ref, 'refs/tags/v' )
