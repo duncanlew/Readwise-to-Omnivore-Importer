@@ -3,28 +3,32 @@
 The "Readwise to Omnivore Importer" is a custom tool built using Rust to import articles from Readwise Reader to
 Omnivore. It uses a CSV file exported from Readwise Reader using
 the [web interface](https://blog.readwise.io/p/f8c0f71c-fe5f-4025-af57-f9f65c53fed7/#howdoigenerateacsvofallmysaveddocuments).
-The importer parses this CSV file
-and imports all the data into Omnivore. The tool provides clear logging results and a summary of the import process.
+The importer parses this CSV file and imports all the data into Omnivore. An extra check is built into the tool to
+validate if a URL still exists before importing it into Omnivore. This is done to avoid polluting your Omnivore library
+with broken links.
+The tool also provides clear logging results and a summary of the import process.
 
 ## Features
 
 - Parse the exported CSV file
+- URLs that are invalid won't be imported into Omnivore
 - Import into Omnivore using an API key for authentication
-- Detailed logging of invalid and errored results
-- Possibility to run project locally or a binary
+- Detailed logging of invalid and errored results shown in the terminal and stored as a CSV file
+- Possibility to run the project locally or use the tool as a binary
 
 ## Prerequisites
 
-- Exported CSV file from Readwise Reader using the web interface. Check the [FAQ](https://blog.readwise.io/p/f8c0f71c-fe5f-4025-af57-f9f65c53fed7/#howdoigenerateacsvofallmysaveddocuments) for the steps.
+- Exported CSV file from Readwise Reader using the web interface. Check
+  the [FAQ](https://blog.readwise.io/p/f8c0f71c-fe5f-4025-af57-f9f65c53fed7/#howdoigenerateacsvofallmysaveddocuments)
+  for the steps.
 - [API key](https://docs.omnivore.app/integrations/api.html#getting-an-api-token) from Omnivore
 
 ## Running the importer tool
 
-There are two ways to run the importer tool. The easiest way without requiring to install Rust tools is by using the
+There are two ways to run the importer tool. The easiest way without requiring to install Rust is by using the
 binary.
 For those who would like to explore the repository or make changes to the source code, it's also possible to run the
-tool
-with the Rust build tools.
+tool with the Rust build tools.
 
 ### Running it with the binary
 
