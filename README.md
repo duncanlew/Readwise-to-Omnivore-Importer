@@ -1,12 +1,14 @@
 # Readwise to Omnivore importer
 
-The "Readwise to Omnivore Importer" is a custom tool built using Rust to import articles from Readwise Reader to
+The "Readwise to Omnivore Importer" is a custom tool developed using Rust to facilitate the import of articles from
+Readwise Reader into
 Omnivore. It uses a CSV file exported from Readwise Reader using
 the [web interface](https://blog.readwise.io/p/f8c0f71c-fe5f-4025-af57-f9f65c53fed7/#howdoigenerateacsvofallmysaveddocuments).
-The importer parses this CSV file and imports all the data into Omnivore. An extra check is built into the tool to
-validate if a URL still exists before importing it into Omnivore. This is done to avoid polluting your Omnivore library
+The importer parses this CSV file, ensuring all data is transferred to Omnivore. Additionally, a verification check is
+run to confirm the existence
+of a URL before importing it into Omnivore. This is done to avoid polluting your Omnivore library
 with broken links.
-The tool also provides clear logging results and a summary of the import process.
+Furthermore, the tool provides clear logging results and a summary of the import process.
 
 ## Features
 
