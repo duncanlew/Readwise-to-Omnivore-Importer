@@ -50,6 +50,21 @@ A compiled binary is available for download in the project GitHub Releases.
 
 ### Running it locally
 
+To run the project locally, make sure to first install [Rust](https://www.rust-lang.org/tools/install) on your local
+machine. This should only take a few minutes. When that is done, open up a terminal and follow these steps:
+1. __Clone the repository__
+    ```bash
+   git clone git@github.com:duncanlew/readwise-to-omnivore-importer.git
+   cd readwise-to-omnivore-importer
+    ```
+2. __Add your CSV file__
+
+    Add your exported CSV file from Readwise Reader into the directory called `readwise-to-omnivore-importer`.  
+3. __Run the importer__
+    ```bash
+    cargo run -- --key YOUR_API_KEY --file-path PATH_TO_CSV
+    ```
+
 ## Background
 
 Readwise Reader and Omnivore are both great read-later services. If for any reason you decide to switch from one to the
